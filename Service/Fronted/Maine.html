@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PeopleConnect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #ffffff;
+            --text: #0f172a;
+            --muted: #475569;
+            --border: #e2e8f0;
+            --primary: #3b82f6;
+            --primary-press: #2563eb;
+        }
+        html, body {
+            height: 100%;
+            background: var(--bg);
+            color: var(--text);
+            font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+        }
+        .container {
+            max-width: 920px;
+            margin: 0 auto;
+            padding: 48px 16px 64px;
+        }
+        .card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+        }
+        .hero h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        .hero p, .hero li {
+            color: var(--muted);
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 20px 0;
+        }
+        .btn-primary {
+            display: inline-block;
+            padding: 12px 20px;
+            font-weight: 600;
+            border-radius: 10px;
+            background: var(--primary);
+            color: #fff;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: background .15s ease;
+        }
+        .btn-primary:hover{ background: var(--primary-press); }
+        .center {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Блок с описанием проекта и кнопкой "Начать" -->
+    <section class="card hero" aria-labelledby="project-title">
+        <h1 id="project-title">Идея проекта: PeopleConnect — платформа для организации совместной работы и общения</h1>
+        <p><strong>Описание:</strong><br>
+            PeopleConnect — это система, которая помогает людям объединяться в проекты, распределять роли и совместно выполнять задачи. Основная цель — упростить взаимодействие людей в команде, сделать их вклад прозрачным и понятным.</p>
+        <div class="divider"></div>
+        <p><strong>Основные сущности:</strong></p>
+        <ol>
+            <li><strong>Люди (person)</strong> — уникальный идентификатор, имя и участие в проектах.</li>
+            <li><strong>Проекты (project)</strong> — объединение людей вокруг цели, у проекта есть создатель, название и описание.</li>
+            <li><strong>Роли (roles)</strong> — каждый участник может иметь роль (лидер, координатор, участник, волонтёр).</li>
+            <li><strong>Задачи (tasks)</strong> — внутри проектов создаются задачи со статусом (todo, in_progress, done).</li>
+        </ol>
+        <div class="center">
+            <form action="/maine/api" method="post">
+                <button type="submit" class="btn-primary">Начать</button>
+            </form>
+        </div>
+    </section>
+</div>
+</body>
+</html>

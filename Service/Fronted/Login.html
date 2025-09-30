@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Вход</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: #e2e8f0;
+      --primary: #3b82f6;
+      --primary-press: #2563eb;
+      --success: #16a34a;
+    }
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    .container {
+      max-width: 420px;
+      margin: 0 auto;
+      padding: 64px 16px;
+    }
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+    }
+    .field {
+      margin-bottom: 16px;
+    }
+    .input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 16px;
+    }
+    .btn-primary {
+      width: 100%;
+      padding: 14px 20px;
+      font-weight: 600;
+      border-radius: 10px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      transition: background .15s ease;
+      font-size: 18px;
+    }
+    .btn-primary:hover {
+      background: var(--primary-press);
+    }
+    .link {
+      display: block;
+      margin-top: 20px;
+      text-align: center;
+      font-size: 16px;
+      color: var(--primary);
+      text-decoration: none;
+    }
+    .success-message {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 10px;
+      background: #dcfce7;
+      color: var(--success);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <h1>Вход</h1>
+    <form id="loginForm" action="/api/login" method="post">
+      <div class="field">
+        <input class="input" type="email" name="email" placeholder="Электронная почта" required>
+      </div>
+      <div class="field">
+        <input class="input" type="password" name="password" placeholder="Пароль" required>
+      </div>
+      <button type="submit" class="btn-primary">Войти</button>
+    </form>
+    <div id="responseMessage"></div>
+    <a href="/register" class="link">Создать аккаунт</a>
+  </div>
+</div>
+
+<script>
+  const form = document.getElementById('loginForm');
+  const responseDiv = document.getElementById('responseMessage');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    responseDiv.innerHTML = ''; // очищаем предыдущее сообщение
+
+    const formData = new FormData(form);
+
+    try {
+      const res = await fetch(form.action, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (res.ok) {
+        responseDiv.innerHTML = `
+          <div class="success-message">
+            ✔ Все ок — вход выполнен
+          </div>
+        `;
+      } else {
+        responseDiv.innerHTML = `
+          <div class="success-message" style="background:#fee2e2; color:#dc2626;">
+            ✖ Ошибка входа (${res.status})
+          </div>
+        `;
+      }
+    } catch (err) {
+      responseDiv.innerHTML = `
+        <div class="success-message" style="background:#fee2e2; color:#dc2626;">
+          ✖ Ошибка соединения
+        </div>
+      `;
+    }
+  });
+</script>
+</body>
+</html>
