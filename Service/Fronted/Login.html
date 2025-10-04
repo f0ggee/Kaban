@@ -3,143 +3,261 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Вход</title>
+  <title>Filesb — Вход</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --bg: #ffffff;
-      --text: #0f172a;
-      --muted: #475569;
-      --border: #e2e8f0;
-      --primary: #3b82f6;
-      --primary-press: #2563eb;
-      --success: #16a34a;
+    :root{
+      --bg:#0a0a0a;
+      --panel:#000000;
+      --text:#e5fff4;
+      --muted:#89f0c2;
+      --border:#0f3a2e;
+      --primary:#10b981;
+      --primary-press:#059669;
+      --danger:#dc2626;
+      --danger-bg:#3b0b0b;
+      --focus:#22c55e;
     }
-    html, body {
-      height: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+
+    /* фикс переполнения */
+    *,*::before,*::after{ box-sizing: border-box; }
+
+    html,body{
+      height:100%;
+      background:var(--bg);
+      color:var(--text);
+      font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
     }
-    .container {
-      max-width: 420px;
-      margin: 0 auto;
-      padding: 64px 16px;
+    .container{
+      max-width:440px;
+      margin:0 auto;
+      padding:64px 16px;
     }
-    h1 {
-      font-size: 32px;
-      font-weight: 700;
-      margin-bottom: 24px;
-      text-align: center;
+    .brand{
+      text-align:center;
+      margin-bottom:20px;
+      letter-spacing:.5px;
+      font-weight:700;
+      color:var(--primary);
     }
-    .card {
-      background: #fff;
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 28px;
+    .brand small{
+      display:block;
+      color:var(--muted);
+      font-weight:400;
+      opacity:.8;
+      margin-top:6px;
     }
-    .field {
-      margin-bottom: 16px;
+    .card{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:28px;
+      box-shadow:0 0 28px rgba(16,185,129,.12);
     }
-    .input {
-      width: 100%;
-      padding: 14px 16px;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      font-size: 16px;
+    h1{
+      font-size:28px;
+      font-weight:700;
+      margin:0 0 8px;
+      text-align:center;
+      color:var(--primary);
     }
-    .btn-primary {
-      width: 100%;
-      padding: 14px 20px;
-      font-weight: 600;
-      border-radius: 10px;
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      cursor: pointer;
-      transition: background .15s ease;
-      font-size: 18px;
+    .sub{
+      text-align:center;
+      color:var(--muted);
+      font-size:14px;
+      margin-bottom:20px;
     }
-    .btn-primary:hover {
-      background: var(--primary-press);
+    .field{ margin-bottom:16px; }
+    label{
+      display:block;
+      font-size:14px;
+      margin-bottom:8px;
+      color:var(--muted);
     }
-    .link {
-      display: block;
-      margin-top: 20px;
-      text-align: center;
-      font-size: 16px;
-      color: var(--primary);
-      text-decoration: none;
+    .input-wrap{ position:relative; }
+    .input{
+      width:100%;
+      padding:14px 90px 14px 14px; /* запас под кнопку */
+      background:#07110e;
+      border:1px solid var(--border);
+      border-radius:10px;
+      color:var(--text);
+      font-size:16px;
+      outline:none;
+      transition:border-color .15s ease, box-shadow .15s ease;
     }
-    .success-message {
-      margin-top: 16px;
-      padding: 12px;
-      border-radius: 10px;
-      background: #dcfce7;
-      color: var(--success);
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      justify-content: center;
+    .input::placeholder{ color:#4bbd8f; }
+    .input:focus{
+      border-color:var(--focus);
+      box-shadow:0 0 0 3px rgba(34,197,94,.15);
+    }
+    .toggle{
+      position:absolute;
+      right:8px;
+      top:50%;
+      transform:translateY(-50%);
+      background:transparent;
+      border:0;
+      color:var(--muted);
+      font-size:13px;
+      cursor:pointer;
+      padding:6px 10px;
+      border-radius:8px;
+    }
+    .toggle:hover{ color:var(--text); }
+
+    .btn-primary{
+      width:100%;
+      padding:14px 20px;
+      font-weight:600;
+      border-radius:10px;
+      background:var(--primary);
+      color:#00150e;
+      border:none;
+      cursor:pointer;
+      transition:background .15s ease, transform .06s ease;
+      font-size:17px;
+    }
+    .btn-primary:hover{ background:var(--primary-press); }
+    .btn-primary:active{ transform:translateY(1px); }
+    .btn-primary[disabled]{ opacity:.7; cursor:not-allowed; }
+
+    .link{
+      display:inline-block;
+      font-size:15px;
+      color:var(--muted);
+      text-decoration:none;
+    }
+    .link:hover{ color:var(--text); }
+
+    .actions{
+      display:flex;
+      justify-content:flex-end;
+      margin-top:6px;
+      margin-bottom:10px;
+    }
+
+    .message{
+      margin-top:16px;
+      padding:12px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background:#061b14;
+      color:var(--muted);
+      font-weight:600;
+      text-align:center;
+      display:none;
+    }
+    .message.success{
+      background:#072015;
+      color:var(--primary);
+      border-color:#145a42;
+      display:block;
+    }
+    .message.error{
+      background:var(--danger-bg);
+      color:#ffb4b4;
+      border-color:#6b1111;
+      display:block;
+    }
+
+    .footer{
+      margin-top:20px;
+      text-align:center;
+      font-size:12px;
+      color:var(--muted);
+      opacity:.8;
     }
   </style>
 </head>
 <body>
 <div class="container">
-  <div class="card">
-    <h1>Вход</h1>
-    <form id="loginForm" action="/api/login" method="post">
+  <div class="brand">
+    Filesb
+    <small>Быстрый обмен файлами без лишних шагов</small>
+  </div>
+
+  <div class="card" role="region" aria-labelledby="title">
+    <h1 id="title">Вход</h1>
+    <p class="sub">Продолжите, чтобы получить доступ к личным файлам</p>
+
+    <form id="loginForm" action="/api/login" method="post" novalidate>
       <div class="field">
-        <input class="input" type="email" name="email" placeholder="Электронная почта" required>
+        <label for="email">Электронная почта</label>
+        <div class="input-wrap">
+          <input id="email" class="input" type="email" name="email" placeholder="name@example.com" required autocomplete="username" />
+        </div>
       </div>
+
       <div class="field">
-        <input class="input" type="password" name="password" placeholder="Пароль" required>
+        <label for="password">Пароль</label>
+        <div class="input-wrap">
+          <input id="password" class="input" type="password" name="password" placeholder="Введите пароль" required autocomplete="current-password" minlength="6" />
+          <button type="button" class="toggle" id="togglePwd" aria-label="Показать пароль">Показать</button>
+        </div>
       </div>
-      <button type="submit" class="btn-primary">Войти</button>
+
+      <div class="actions">
+        <a class="link" href="/forgot">Забыли пароль</a>
+      </div>
+
+      <button id="submitBtn" type="submit" class="btn-primary">Войти</button>
+      <div id="responseMessage" class="message" aria-live="polite"></div>
     </form>
-    <div id="responseMessage"></div>
-    <a href="/register" class="link">Создать аккаунт</a>
+
+    <div style="text-align:center; margin-top:18px;">
+      <a href="/register" class="link">Создать аккаунт</a>
+    </div>
+    <div class="footer">© 2025 Filesb</div>
   </div>
 </div>
 
 <script>
   const form = document.getElementById('loginForm');
   const responseDiv = document.getElementById('responseMessage');
+  const submitBtn = document.getElementById('submitBtn');
+  const togglePwd = document.getElementById('togglePwd');
+  const pwdInput = document.getElementById('password');
+
+  togglePwd.addEventListener('click', () => {
+    const isPwd = pwdInput.type === 'password';
+    pwdInput.type = isPwd ? 'text' : 'password';
+    togglePwd.textContent = isPwd ? 'Скрыть' : 'Показать';
+    togglePwd.setAttribute('aria-label', isPwd ? 'Скрыть пароль' : 'Показать пароль');
+  });
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    responseDiv.innerHTML = ''; // очищаем предыдущее сообщение
 
-    const formData = new FormData(form);
+    responseDiv.className = 'message';
+    responseDiv.textContent = '';
+    responseDiv.style.display = 'none';
+
+    if (!form.reportValidity()) return;
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Вход...';
 
     try {
-      const res = await fetch(form.action, {
-        method: 'POST',
-        body: formData,
-      });
+      const formData = new FormData(form);
+      const res = await fetch(form.action, { method: 'POST', body: formData });
 
       if (res.ok) {
-        responseDiv.innerHTML = `
-          <div class="success-message">
-            ✔ Все ок — вход выполнен
-          </div>
-        `;
+        responseDiv.classList.add('success');
+        responseDiv.textContent = 'Вход выполнен';
       } else {
-        responseDiv.innerHTML = `
-          <div class="success-message" style="background:#fee2e2; color:#dc2626;">
-            ✖ Ошибка входа (${res.status})
-          </div>
-        `;
+        responseDiv.classList.add('error');
+        responseDiv.textContent = `Ошибка входа. Код ${res.status}`;
       }
-    } catch (err) {
-      responseDiv.innerHTML = `
-        <div class="success-message" style="background:#fee2e2; color:#dc2626;">
-          ✖ Ошибка соединения
-        </div>
-      `;
+    } catch {
+      responseDiv.classList.add('error');
+      responseDiv.textContent = 'Ошибка соединения';
+    } finally {
+      responseDiv.style.display = 'block';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Войти';
     }
   });
 </script>

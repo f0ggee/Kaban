@@ -1,11 +1,10 @@
-package Service
+package Handlers
 
 import (
 	"Kaban/Dto"
 	"Kaban/Service/Uttiltesss"
 	"context"
 	"crypto/rand"
-	"crypto/sha256"
 	"database/sql"
 	"encoding/hex"
 	"github.com/gorilla/sessions"
@@ -33,10 +32,7 @@ func Generate_Cookie(ctx context.Context, unic_Id int, dbe *sql.DB, r *http.Requ
 		return err
 
 	}
-
-	he := sha256.Sum256(b)
-
-	h := hex.EncodeToString(he[:])
+	he := hex.EncodeToString(b)
 
 	_, err = dbe.ExecContext(ctx, "UPDATE cookies SET cookie = $1   WHERE  unic_id = $2", he, unic_Id)
 	err = Uttiltesss.Err_Treate(err, w)
@@ -51,7 +47,7 @@ func Generate_Cookie(ctx context.Context, unic_Id int, dbe *sql.DB, r *http.Requ
 		http.Error(w, "cookie dont sen", http.StatusUnauthorized)
 		return err
 	}
-	session.Values["cookie"] = h
+	session.Values["cookie"] = he
 	session.Options = &sessions.Options{
 		Path:     "/",
 		MaxAge:   100000,
@@ -65,6 +61,7 @@ func Generate_Cookie(ctx context.Context, unic_Id int, dbe *sql.DB, r *http.Requ
 		return err
 
 	}
+	return nil
 
 }
 

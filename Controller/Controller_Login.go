@@ -2,7 +2,7 @@ package Controller
 
 import (
 	"Kaban/Dto"
-	"Kaban/Service"
+	"Kaban/Service/Handlers"
 	"database/sql"
 	"encoding/json"
 	"log/slog"
@@ -38,6 +38,6 @@ func Loging(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	Service.Login_Service(sa, db, w, r)
+	Handlers.Login_Service(sa, db, w, r)
 
 }
