@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Filesb — Sign in</title>
+  <title>Filesb — Sign up</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -70,14 +70,14 @@
     .btn-primary[disabled]{ opacity:.7; cursor:not-allowed; }
     .link{ display:inline-block; font-size:15px; color:var(--muted); text-decoration:none; cursor:pointer; }
     .link:hover{ color:var(--text); }
-    .actions{ display:flex; justify-content:flex-end; margin-top:6px; margin-bottom:10px; }
+    .actions{ display:flex; justify-content:space-between; margin-top:6px; margin-bottom:10px; }
     .message{
       margin-top:16px; padding:12px; border-radius:10px; border:1px solid var(--border);
       background:#061b14; color:#89f0c2; font-weight:600; text-align:center; display:none;
     }
     .message.success{ background:#072015; color:var(--primary); border-color:#145a42; display:block; }
     .message.error{ background:var(--danger-bg); color:#ffb4b4; border-color:#6b1111; display:block; }
-    .footer{ margin-top:20px; text-align:center; font-size:12px; color:var(--muted); opacity:.8; }
+    .footer{ margin-top:20px; text-align:center; font-size:12px; color:#89f0c2; opacity:.8; }
   </style>
 </head>
 <body>
@@ -88,58 +88,60 @@
   </div>
 
   <div class="card" role="region" aria-labelledby="title">
-    <h1 id="title">Sign in</h1>
-    <p class="sub">Continue to access your personal files</p>
+    <h1 id="title">Sign up</h1>
+    <p class="sub">Create an account to access your personal files</p>
 
-    <form id="loginForm" action="/login/api" method="post" novalidate>
+    <!-- IMPORTANT: all requests go to /register/api -->
+    <form id="registerForm" action="/register/api" method="post" novalidate>
+      <div class="field">
+        <label for="name">Name</label>
+        <div class="input-wrap">
+          <input id="name" class="input" type="text" name="name" placeholder="Your name" required minlength="2" autocomplete="name" />
+        </div>
+      </div>
+
       <div class="field">
         <label for="email">Email</label>
         <div class="input-wrap">
-          <input id="email" class="input" type="email" name="email" placeholder="name@example.com" required autocomplete="username" />
+          <input id="email" class="input" type="email" name="email" placeholder="name@example.com" required autocomplete="email" />
         </div>
       </div>
 
       <div class="field">
         <label for="password">Password</label>
         <div class="input-wrap">
-          <input id="password" class="input" type="password" name="password" placeholder="Enter your password" required autocomplete="current-password" minlength="6" />
+          <input id="password" class="input" type="password" name="password" placeholder="Create a password" required autocomplete="new-password" minlength="6" />
           <button type="button" class="toggle" id="togglePwd" aria-label="Show password">Show</button>
         </div>
       </div>
 
       <div class="actions">
-        <a class="link" href="/forgot">Forgot password?</a>
+        <a class="link" href="/login">I already have an account</a>
+        <span></span>
       </div>
 
-      <button id="submitBtn" type="submit" class="btn-primary">Sign in</button>
+      <button id="submitBtn" type="submit" class="btn-primary">Create account</button>
       <div id="responseMessage" class="message" aria-live="polite"></div>
     </form>
 
-    <div style="text-align:center; margin-top:18px;">
-      <button id="registerBtn" class="link" type="button">Create account</button>
-    </div>
     <div class="footer">© 2025 Filesb</div>
   </div>
 </div>
 
 <script>
-  const form = document.getElementById('loginForm');
+  const form = document.getElementById('registerForm');
   const responseDiv = document.getElementById('responseMessage');
   const submitBtn = document.getElementById('submitBtn');
   const togglePwd = document.getElementById('togglePwd');
   const pwdInput = document.getElementById('password');
   const emailInput = document.getElementById('email');
-  const registerBtn = document.getElementById('registerBtn');
+  const nameInput = document.getElementById('name');
 
   togglePwd.addEventListener('click', () => {
     const isPwd = pwdInput.type === 'password';
     pwdInput.type = isPwd ? 'text' : 'password';
     togglePwd.textContent = isPwd ? 'Hide' : 'Show';
     togglePwd.setAttribute('aria-label', isPwd ? 'Hide password' : 'Show password');
-  });
-
-  registerBtn.addEventListener('click', () => {
-    window.location.href = '/register';
   });
 
   form.addEventListener('submit', async (e) => {
@@ -152,10 +154,11 @@
     if (!form.reportValidity()) return;
 
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Signing in...';
+    submitBtn.textContent = 'Submitting...';
 
     try {
       const payload = {
+        name: nameInput.value.trim(),
         email: emailInput.value.trim(),
         password: pwdInput.value
       };
@@ -184,12 +187,14 @@
 
       if (res.ok) {
         responseDiv.classList.add('success');
-        responseDiv.textContent = 'Signed in';
+        responseDiv.textContent = 'Registration completed';
       } else {
-        let msg = `Sign-in error. Code ${res.status}`;
+        let msg = `Registration error. Code ${res.status}`;
         try {
           const data = await res.json();
-          if (data && (data.error || data.message)) msg = data.error || data.message;
+          if (data && (data.error || data.message)) {
+            msg = data.error || data.message;
+          }
         } catch {}
         responseDiv.classList.add('error');
         responseDiv.textContent = msg;
@@ -200,7 +205,7 @@
     } finally {
       responseDiv.style.display = 'block';
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Sign in';
+      submitBtn.textContent = 'Create account';
     }
   });
 </script>

@@ -1,102 +1,104 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Filesb — обмен файлами</title>
+    <title>Filesb — file sharing</title>
+
+    <!-- CSP: allow own resources, Google Fonts and inline script -->
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self';
+                 connect-src 'self';
+                 img-src 'self' data:;
+                 style-src 'self' https://fonts.googleapis.com 'unsafe-inline';
+                 font-src https://fonts.gstatic.com;
+                 script-src 'self' 'unsafe-inline';
+                 base-uri 'self';
+                 form-action 'self'">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        :root {
-            --bg: #0a0a0a;
-            --text: #d1fae5;
-            --muted: #34d399;
-            --border: #064e3b;
-            --primary: #10b981;
-            --primary-press: #059669;
-        }
-        html, body {
-            height: 100%;
-            background: var(--bg);
-            color: var(--text);
-            font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-        }
-        .container {
-            max-width: 920px;
-            margin: 0 auto;
-            padding: 48px 16px 64px;
-        }
-        .card {
-            background: #000;
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 28px;
-            box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
-        }
-        .hero h1 {
-            font-size: 32px;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 16px;
-        }
-        .hero p, .hero li {
-            color: var(--muted);
-            font-size: 16px;
-            line-height: 1.6;
-        }
-        .divider {
-            height: 1px;
-            background: var(--border);
-            margin: 20px 0;
-        }
-        .btn-primary {
-            display: inline-block;
-            padding: 12px 20px;
-            font-weight: 600;
-            border-radius: 10px;
-            background: var(--primary);
-            color: #000;
-            text-decoration: none;
-            border: none;
-            cursor: pointer;
-            transition: background .15s ease, transform .1s ease;
-        }
-        .btn-primary:hover {
-            background: var(--primary-press);
-            transform: scale(1.03);
-        }
-        .center {
-            text-align: center;
-            margin-top: 20px;
-        }
-        .terminal-text {
-            font-family: "Courier New", monospace;
-            color: var(--primary);
-        }
+        :root { --bg:#0a0a0a; --text:#d1fae5; --muted:#34d399; --border:#064e3b; --primary:#10b981; --primary-press:#059669; }
+        html,body{height:100%;background:var(--bg);color:var(--text);font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;}
+        .container{max-width:920px;margin:0 auto;padding:48px 16px 64px;}
+        .card{background:#000;border:1px solid var(--border);border-radius:16px;padding:28px;box-shadow:0 0 20px rgba(16,185,129,.15);}
+        .hero h1{font-size:32px;font-weight:700;color:var(--primary);margin-bottom:16px;}
+        .hero p,.hero li{color:var(--muted);font-size:16px;line-height:1.6;}
+        .divider{height:1px;background:var(--border);margin:20px 0;}
+        .btn-primary{display:inline-block;padding:12px 20px;font-weight:600;border-radius:10px;background:var(--primary);color:#000;text-decoration:none;border:none;transition:background .15s ease,transform .1s ease;}
+        .btn-primary:hover{background:var(--primary-press);transform:scale(1.03);}
+        .center{text-align:center;margin-top:20px;}
+        .terminal-text{font-family:"Courier New",monospace;color:var(--primary);}
+        .beacon{position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;}
     </style>
 </head>
 <body>
+
+<!-- Immediate non-blocking GET to /maine/api on page load -->
+<img class="beacon" src="/maine/api" alt="">
+
 <div class="container">
     <section class="card hero" aria-labelledby="project-title">
-        <h1 id="project-title">Filesb — удобный обмен файлами</h1>
-        <p><strong>Описание:</strong><br>
-            <span class="terminal-text">Filesb</span> — это система, которая позволяет быстро и безопасно обмениваться файлами между устройствами.
-            Никаких мессенджеров, логинов и авторизаций — просто загрузи файл и получи ссылку для передачи.</p>
+        <h1 id="project-title">Filesb — simple file sharing</h1>
+        <p><strong>Description:</strong><br>
+            <span class="terminal-text">Filesb</span> is a system for fast and secure file sharing with no sign-up required.</p>
         <div class="divider"></div>
-        <p><strong>Особенности:</strong></p>
+        <p><strong>Features:</strong></p>
         <ol>
-            <li>Обмен файлами без регистрации и сторонних сервисов.</li>
-            <li>Минималистичный интерфейс и тёмно-зелёный стиль.</li>
-            <li>Подходит для быстрого и безопасного обмена между любыми устройствами.</li>
-            <li>Современный дизайн, вдохновлённый стилем терминала.</li>
+            <li>Minimal dark-green interface.</li>
+            <li>Works on any device.</li>
+            <li>Terminal-style design.</li>
         </ol>
         <div class="center">
-            <form action="/upload" method="post">
-                <button type="submit" class="btn-primary">Начать</button>
-            </form>
+            <a href="/login" class="btn-primary" id="startBtn">Get started</a>
         </div>
     </section>
 </div>
+
+<script>
+    (function () {
+        var btn = document.getElementById('startBtn');
+        if (!btn) return;
+
+        btn.addEventListener('click', function (e) {
+            e.preventDefault(); // block default navigation until we decide what to do
+            var fallbackHref = btn.getAttribute('href') || '/login';
+
+            fetch('/maine/api', {
+                method: 'GET',
+                credentials: 'same-origin',
+                cache: 'no-store',
+                redirect: 'follow' // allow fetch to follow redirects
+            })
+                .then(function (res) {
+                    // If server redirected — res.redirected === true
+                    if (res.redirected && res.url) {
+                        window.location.replace(res.url);
+                        return;
+                    }
+
+                    // If redirect was not automatically followed
+                    if (res.status >= 300 && res.status < 400) {
+                        var loc = res.headers.get('Location');
+                        if (loc) {
+                            var finalUrl = new URL(loc, window.location.origin).href;
+                            window.location.replace(finalUrl);
+                            return;
+                        }
+                    }
+
+                    // If there is no redirect — go to /login
+                    window.location.href = fallbackHref;
+                })
+                .catch(function () {
+                    // On error — go to /login
+                    window.location.href = fallbackHref;
+                });
+        });
+    })();
+</script>
 </body>
 </html>

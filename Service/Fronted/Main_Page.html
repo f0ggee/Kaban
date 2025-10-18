@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Filesb — Загрузка файлов</title>
+  <title>Filesb — File Upload</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -116,27 +116,26 @@
 </head>
 <body>
 <div class="container">
-  <header class="header" aria-label="Шапка сайта">
+  <header class="header" aria-label="Site header">
     <div class="brand">Filesb</div>
-    <nav class="auth" aria-label="Навигация">
-      <a class="btn-outline" href="/login">Войти</a>
-      <a class="btn-outline" href="/register">Регистрация</a>
+    <nav class="auth" aria-label="Navigation">
+      <a class="btn-outline" href="/profile">Profile</a>
     </nav>
   </header>
 
   <main class="grid">
     <section class="card" aria-labelledby="up-title">
-      <h1 id="up-title" class="title">Загрузите файл</h1>
-      <p class="sub">Передайте файл и получите прямую ссылку для обмена</p>
+      <h1 id="up-title" class="title">Upload files</h1>
+      <p class="sub">Upload files and get a direct share link</p>
 
-      <div id="dropzone" class="dropzone" tabindex="0" aria-label="Область для перетаскивания файлов">
-        Перетащите файл сюда
+      <div id="dropzone" class="dropzone" tabindex="0" aria-label="Drop area">
+        Drag files here
         <div class="drop-actions">
-          <button id="chooseBtn" class="btn-primary" type="button">Выбрать файл</button>
-          <button id="uploadBtn" class="btn-outline" type="button" disabled>Загрузить</button>
+          <button id="chooseBtn" class="btn-primary" type="button">Choose files</button>
+          <button id="uploadBtn" class="btn-outline" type="button" disabled>Upload</button>
         </div>
-        <div class="hint">Поддерживается несколько файлов</div>
-        <div class="limit">Максимальный размер файла: 5 ГБ</div>
+        <div class="hint">Multiple files supported</div>
+        <div class="limit">Max file size: 5 GB</div>
         <input id="fileInput" type="file" multiple hidden />
       </div>
 
@@ -145,12 +144,12 @@
     </section>
 
     <aside class="card side" aria-labelledby="info-title">
-      <h2 id="info-title" class="title">Почему Filesb</h2>
+      <h2 id="info-title" class="title">Why Filesb</h2>
       <ul class="list">
-        <li>Без входа в мессенджеры</li>
-        <li>Минималистичный интерфейс</li>
-        <li>Ссылки для мгновенного обмена</li>
-        <li>Тёмный стиль с зелёными акцентами</li>
+        <li>No messengers required</li>
+        <li>Minimalist interface</li>
+        <li>Instant share links</li>
+        <li>Dark theme with green accents</li>
       </ul>
       <div class="footer">© 2025 Filesb</div>
     </aside>
@@ -164,7 +163,7 @@
   const uploadBtn = document.getElementById('uploadBtn');
   const list = document.getElementById('fileList');
   const message = document.getElementById('message');
-  const MAX_SIZE = 5 * 1024 * 1024 * 1024; // 5GB
+  const MAX_SIZE = 5 * 1024 * 1024 * 1024; // 5 GB
 
   let files = [];
 
@@ -217,16 +216,24 @@
     uploadBtn.disabled = files.length === 0;
   }
 
+  // keep file input in sync with selected files so we can submit a classic form
+  function syncFileInputFromFiles(arrFiles){
+    const dt = new DataTransfer();
+    for(const f of arrFiles) dt.items.add(f);
+    fileInput.files = dt.files;
+  }
+
   function addFiles(fileList){
     const valid = [];
     for(const f of fileList){
       if(f.size > MAX_SIZE){
-        showMessage(`Файл ${f.name} превышает лимит 5 ГБ`, true);
+        showMessage(`File ${f.name} exceeds the 5 GB limit`, true);
         continue;
       }
       valid.push(f);
     }
     files = valid;
+    syncFileInputFromFiles(files);
     renderList();
   }
 
@@ -247,49 +254,43 @@
   );
   dropzone.addEventListener('drop', e => addFiles(e.dataTransfer.files));
 
-  async function uploadFile(file){
-    return new Promise((resolve,reject) => {
-      const xhr = new XMLHttpRequest();
-      const form = new FormData();
-      form.append('file', file);
-      xhr.open('POST', '/api/upload');
-      xhr.upload.onprogress = ev => {
-        if(!ev.lengthComputable) return;
-        const p = Math.round((ev.loaded/ev.total)*100);
-        file._bar.style.width = p + '%';
-        file._percent.textContent = p + '%';
-      };
-      xhr.onload = () => {
-        if(xhr.status >= 200 && xhr.status < 300){
-          file._bar.style.width = '100%';
-          file._percent.textContent = '100%';
-          try {
-            const { url } = JSON.parse(xhr.responseText || '{}');
-            resolve(url || '');
-          } catch { resolve(''); }
-        } else reject(new Error('HTTP ' + xhr.status));
-      };
-      xhr.onerror = () => reject(new Error('Network'));
-      xhr.send(form);
-    });
-  }
-
-  uploadBtn.addEventListener('click', async () => {
+  // Submit via regular form so server redirects (302/307) to other domains are followed by the browser
+  uploadBtn.addEventListener('click', () => {
     if(files.length === 0) return;
     uploadBtn.disabled = true;
-    showMessage('Загрузка...', false);
-    try{
-      const urls = [];
-      for(const f of files){
-        const url = await uploadFile(f);
-        urls.push(url);
-      }
-      const links = urls.filter(Boolean).map(u => `<a href="${u}" target="_blank" rel="noopener">${u}</a>`).join('<br>');
-      showMessage(links ? `Готово:\n${links}` : 'Файлы загружены');
-    }catch{
-      showMessage('Ошибка при загрузке', true);
-    }finally{
+    showMessage('Uploading... (will open in a new tab)');
+
+    try {
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.enctype = 'multipart/form-data';
+      form.action = '/downloader/api'; // your server endpoint
+      form.target = '_blank';
+      form.style.display = 'none';
+
+      const inputClone = document.createElement('input');
+      inputClone.type = 'file';
+      inputClone.name = 'file';
+      inputClone.multiple = true;
+
+      const dt = new DataTransfer();
+      for(const f of files) dt.items.add(f);
+      inputClone.files = dt.files;
+      form.appendChild(inputClone);
+
+      // optional hidden fields can be appended here
+
+      document.body.appendChild(form);
+      form.submit();
+
+      setTimeout(() => {
+        document.body.removeChild(form);
+        uploadBtn.disabled = false;
+        showMessage('Files sent. Check the new tab.');
+      }, 800);
+    } catch (err) {
       uploadBtn.disabled = false;
+      showMessage('Error: ' + (err.message || err), true);
     }
   });
 </script>

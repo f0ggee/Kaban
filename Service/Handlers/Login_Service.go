@@ -2,15 +2,17 @@ package Handlers
 
 import (
 	"Kaban/Dto"
+	"Kaban/Service/Connect_to_BD"
 	"Kaban/Service/Uttiltesss"
 	"context"
 	"crypto/rand"
-	"database/sql"
 	"encoding/hex"
 	"github.com/gorilla/sessions"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
 	"log/slog"
 	"net/http"
+	"time"
 )
 
 func Login_Check(password string, hash_of_password string) error {
@@ -23,7 +25,7 @@ func Login_Check(password string, hash_of_password string) error {
 	return nil
 
 }
-func Generate_Cookie(ctx context.Context, unic_Id int, dbe *sql.DB, r *http.Request, w http.ResponseWriter) error {
+func Generate_Cookie(ctx context.Context, db *pgxpool.Pool, unic_Id int, r *http.Request, w http.ResponseWriter) error {
 
 	b := make([]byte, 16)
 	_, err := rand.Read(b)
@@ -34,7 +36,7 @@ func Generate_Cookie(ctx context.Context, unic_Id int, dbe *sql.DB, r *http.Requ
 	}
 	he := hex.EncodeToString(b)
 
-	_, err = dbe.ExecContext(ctx, "UPDATE cookies SET cookie = $1   WHERE  unic_id = $2", he, unic_Id)
+	_, err = db.Exec(context.Background(), "UPDATE cookies SET cookie = $1   WHERE  unic_id = $2", he, unic_Id)
 	err = Uttiltesss.Err_Treate(err, w)
 	if err != nil {
 		slog.Error("Err", err)
@@ -48,9 +50,10 @@ func Generate_Cookie(ctx context.Context, unic_Id int, dbe *sql.DB, r *http.Requ
 		return err
 	}
 	session.Values["cookie"] = he
+
 	session.Options = &sessions.Options{
 		Path:     "/",
-		MaxAge:   100000,
+		MaxAge:   int((24 * time.Hour).Seconds()),
 		Secure:   false,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
@@ -65,8 +68,12 @@ func Generate_Cookie(ctx context.Context, unic_Id int, dbe *sql.DB, r *http.Requ
 
 }
 
-func Login_Service(s *Dto.Handler_Login, db *sql.DB, w http.ResponseWriter, r *http.Request) {
-
+func Login_Service(s *Dto.Handler_Login, w http.ResponseWriter, r *http.Request) {
+	db, err := Connect_to_BD.Connect()
+	if err != nil {
+		slog.Error("Err for connect to bd in login", err)
+		return
+	}
 	ctx, canclel := Uttiltesss.Contexte()
 	defer canclel()
 
@@ -75,21 +82,21 @@ func Login_Service(s *Dto.Handler_Login, db *sql.DB, w http.ResponseWriter, r *h
 		password string
 	)
 
-	err := db.QueryRowContext(ctx, `SELECT unic_id ,password  FROM person WHERE email = $1`, s.Email).Scan(&Unic_id, &password)
+	err = db.QueryRow(context.Background(), `SELECT unic_id ,password FROM person WHERE email=$1`, s.Email).Scan(&Unic_id, &password)
 	err = Uttiltesss.Err_Treate(err, w)
 	if err != nil {
-		slog.Error("Err", err)
+		slog.Error("Func login 1 ", err)
 		return
 	}
 
 	err = Login_Check(s.Password, password)
 	if err != nil {
-		slog.Error("Err", "err", err)
+		slog.Error("func login 2", "err", err)
 		return
 	}
-	err = Generate_Cookie(ctx, Unic_id, db, r, w)
+	err = Generate_Cookie(ctx, db, Unic_id, r, w)
 	if err != nil {
-		slog.Error("Err", "err", err)
+		slog.Error("func login 3", "err", err)
 		return
 	}
 	http.Redirect(w, r, "/main", http.StatusFound)

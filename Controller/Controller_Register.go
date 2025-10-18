@@ -3,7 +3,6 @@ package Controller
 import (
 	"Kaban/Dto"
 	"Kaban/Service/Handlers"
-	"database/sql"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -22,8 +21,7 @@ func chehkjson_Register(r *http.Request) (*Dto.Handler_Registerr, error) {
 	return &e, err
 }
 
-func Controller(w http.ResponseWriter, r *http.Request) {
-	var db *sql.DB
+func Controller_Register(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodPost {
 		slog.Error("Error from Controller_register, method don't allow ", "err")
@@ -37,5 +35,5 @@ func Controller(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Handlers.Register_Service(t, db, w, r)
+	Handlers.Register_Service(t, w, r)
 }

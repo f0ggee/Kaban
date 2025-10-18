@@ -3,7 +3,6 @@ package Controller
 import (
 	"Kaban/Dto"
 	"Kaban/Service/Handlers"
-	"database/sql"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -24,7 +23,6 @@ func chehkjson(r *http.Request) (*Dto.Handler_Login, error) {
 
 func Loging(w http.ResponseWriter, r *http.Request) {
 
-	var db *sql.DB
 	if r.Method != http.MethodPost {
 		http.Error(w, "Erro", http.StatusUnauthorized)
 		slog.Error("Error", "err")
@@ -38,6 +36,9 @@ func Loging(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	Handlers.Login_Service(sa, db, w, r)
+	Handlers.Login_Service(sa, w, r)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(w)
 
 }

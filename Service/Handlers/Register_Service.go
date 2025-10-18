@@ -2,12 +2,13 @@ package Handlers
 
 import (
 	"Kaban/Dto"
+	"Kaban/Service/Connect_to_BD"
 	"Kaban/Service/Uttiltesss"
 	"context"
 	"crypto/rand"
-	"database/sql"
 	"encoding/hex"
 	"github.com/gorilla/sessions"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/scrypt"
 	"log/slog"
 	"net/http"
@@ -15,7 +16,7 @@ import (
 	"time"
 )
 
-func aenerate_Cookie(ctx context.Context, unic_Id int, dbe *sql.DB, r *http.Request, w http.ResponseWriter) error {
+func aenerate_Cookie(ctx context.Context, unic_Id int, dbe *pgxpool.Pool, r *http.Request, w http.ResponseWriter) error {
 
 	b := make([]byte, 16)
 	_, err := rand.Read(b)
@@ -26,7 +27,7 @@ func aenerate_Cookie(ctx context.Context, unic_Id int, dbe *sql.DB, r *http.Requ
 	}
 	he := hex.EncodeToString(b)
 
-	_, err = dbe.ExecContext(ctx, "UPDATE person SET cookie = $1   WHERE  unic_id = $2", he, unic_Id)
+	_, err = dbe.Exec(context.Background(), "UPDATE person SET cookie = $1   WHERE  unic_id = $2", he, unic_Id)
 	err = Uttiltesss.Err_Treate(err, w)
 	if err != nil {
 		slog.Error("Err", err)
@@ -57,32 +58,37 @@ func aenerate_Cookie(ctx context.Context, unic_Id int, dbe *sql.DB, r *http.Requ
 
 }
 
-func Register_Service(de *Dto.Handler_Registerr, db *sql.DB, w http.ResponseWriter, r *http.Request) {
+func Register_Service(de *Dto.Handler_Registerr, w http.ResponseWriter, r *http.Request) {
+	var err error
 
 	ctx, Cancel := Uttiltesss.Contexte()
 	defer Cancel()
-
-	var err error
+	db, err := Connect_to_BD.Connect()
+	if err != nil {
+		slog.Error("Err_from_register 1 ", err)
+		return
+	}
 
 	if len(de.Password) < 3 {
 		http.Error(w, "Password are small", http.StatusUnauthorized)
 		slog.Error("Err password are smal")
 		return
 	}
+	slog.Info(de.Email)
 	if !strings.Contains(de.Email, "@") {
 		http.Error(w, "Person name must contain @", http.StatusBadRequest)
-		slog.Info("Func register2:", err)
+		slog.Info("Func register2")
 		return
 	}
 
 	var existingPerson bool
 
-	err = db.QueryRowContext(ctx, "SELECT EXISTS (select 1 FROM person WHERE email=$1", de.Email, de.Name).Scan(&existingPerson)
+	err = db.QueryRow(context.Background(), "SELECT EXISTS (select 1 FROM person WHERE email=$1)", de.Email, de.Name).Scan(&existingPerson)
 
 	err = Uttiltesss.Err_Treate(err, w)
 	if err != nil {
 		http.Error(w, "Can't treat request", http.StatusNotFound)
-		slog.Error("Error", err)
+		slog.Error("Error from register 2", err)
 		return
 	}
 
@@ -94,7 +100,7 @@ func Register_Service(de *Dto.Handler_Registerr, db *sql.DB, w http.ResponseWrit
 
 	te, err := Uttiltesss.HashPassowrd(de.Password)
 	if err != nil {
-		slog.Error("Err", err)
+		slog.Error("Err from register 3", err)
 		return
 	}
 
@@ -109,19 +115,21 @@ func Register_Service(de *Dto.Handler_Registerr, db *sql.DB, w http.ResponseWrit
 
 	var unic_id int
 
-	err = db.QueryRowContext(ctx, "INSERT INTO person(name,email,password,scrypt_salt) VALUES ($1,$2,$3,$4) RETURNING unic_id", de.Name, de.Email, te, D4).Scan(&unic_id)
+	err = db.QueryRow(context.Background(), "INSERT INTO person(name,email,password,scrypt_salt,created_at) VALUES ($1,$2,$3,$4,$5) RETURNING unic_id", de.Name, de.Email, te, D4, time.Now()).Scan(&unic_id)
 
 	if err != nil {
-		slog.Error("Err", err)
+		http.Error(w, "Person already exist", http.StatusUnauthorized)
+		slog.Error("Err from register 4", err)
 		return
 	}
 
 	err = aenerate_Cookie(ctx, unic_id, db, r, w)
 	if err != nil {
-		slog.Error("Err", err)
+		slog.Error("Err from register 5", err)
 		http.Error(w, "Err", http.StatusNotFound)
 		return
 	}
+	time.Sleep(2 * time.Second)
 
 	http.Redirect(w, r, "/main", http.StatusFound)
 

@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Filesb — Download Link</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0a0a0a;
+      --panel:#000;
+      --text:#e5fff4;
+      --muted:#89f0c2;
+      --border:#0f3a2e;
+      --primary:#10b981;
+      --primary-press:#059669;
+      --focus:#22c55e;
+      --danger:#dc2626;
+    }
+    *,*::before,*::after{ box-sizing:border-box; }
+    html,body{
+      height:100%;
+      background:var(--bg);
+      color:var(--text);
+      font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+    }
+    a{ color:var(--muted); text-decoration:none; }
+    a:hover{ color:var(--text); }
+
+    .container{ max-width:980px; margin:0 auto; padding:24px 16px 64px; }
+
+    .header{
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:24px;
+    }
+    .brand{
+      font-weight:700; color:var(--primary); font-size:20px;
+      letter-spacing:.4px;
+    }
+    .btn-outline{
+      padding:10px 14px; border:1px solid var(--border); border-radius:10px;
+      background:#07110e; color:var(--text); font-weight:600; font-size:14px;
+      transition:border-color .15s ease, background .15s ease;
+    }
+    .btn-outline:hover{ border-color:var(--focus); }
+    .btn-primary{
+      padding:14px 18px; border:none; border-radius:12px; font-weight:700;
+      background:var(--primary); color:#00150e; cursor:pointer; font-size:16px;
+      transition:background .15s ease, transform .06s ease;
+    }
+    .btn-primary:hover{ background:var(--primary-press); }
+    .btn-primary:active{ transform:translateY(1px); }
+    .btn-primary[disabled]{ opacity:.7; cursor:not-allowed; }
+
+    .card{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:16px; padding:24px;
+      box-shadow:0 0 28px rgba(16,185,129,.12);
+    }
+    .title{ color:var(--primary); margin:0 0 8px; font-size:26px; font-weight:700; }
+    .sub{ color:var(--muted); margin:0 0 18px; }
+
+    /* Centered main block */
+    .center-wrap{
+      display:flex; align-items:center; justify-content:center;
+      min-height:50vh;
+    }
+    .field{
+      display:grid; gap:12px;
+    }
+    .label{
+      font-weight:600; color:var(--muted); font-size:14px;
+    }
+    .input-row{
+      display:grid; grid-template-columns: 1fr auto auto; gap:10px;
+    }
+    .input{
+      padding:16px 14px; border-radius:12px; border:1px solid var(--border);
+      background:#06130f; color:var(--text); font-size:16px; width:100%;
+    }
+    .input[readonly]{ cursor:text; }
+    .hint{ font-size:13px; color:var(--muted); }
+    .message{
+      margin-top:14px; padding:12px; border-radius:10px;
+      border:1px solid var(--border); background:#061b14; color:var(--muted); display:none;
+    }
+    .message.show{ display:block; }
+    .message.error{ color:#ffb4b4; border-color:#6b1111; background:#3b0b0b; }
+
+    .footer{ margin-top:28px; text-align:center; font-size:12px; color:var(--muted); opacity:.8; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header class="header" aria-label="Site header">
+    <div class="brand">Filesb</div>
+    <nav aria-label="Navigation">
+      <a class="btn-outline" href="/profile">Profile</a>
+    </nav>
+  </header>
+
+  <main class="card center-wrap" aria-labelledby="dl-title">
+    <section class="field" style="width:min(780px, 100%);" >
+      <h1 id="dl-title" class="title">Download your file</h1>
+      <p class="sub">Paste the link into the search box and download your file</p>
+
+      <label for="linkInput" class="label">Direct download link</label>
+      <div class="input-row">
+        <input id="linkInput" class="input" type="url" inputmode="url" placeholder="https://example.com/file.zip" aria-label="Download link" readonly />
+        <button id="copyBtn" class="btn-outline" type="button" aria-label="Copy link">Copy</button>
+        <button id="downloadBtn" class="btn-primary" type="button" aria-label="Download file" disabled>Download</button>
+      </div>
+      <div class="hint">The field fills automatically from the server response.</div>
+
+      <div id="message" class="message" role="status" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <div class="footer">© 2025 Filesb</div>
+</div>
+
+<script>
+  // Adjust this endpoint if your server differs.
+  const LINK_ENDPOINT = '/api/link';
+
+  const input = document.getElementById('linkInput');
+  const copyBtn = document.getElementById('copyBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const message = document.getElementById('message');
+
+  function showMessage(text, isError=false){
+    message.textContent = text;
+    message.className = 'message show' + (isError ? ' error' : '');
+  }
+
+  async function fetchLink(){
+    try{
+      const res = await fetch(LINK_ENDPOINT, { method: 'GET', headers:{'Accept':'application/json'} });
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const data = await res.json();
+      const url = (data && (data.url || data.link)) || '';
+      if(typeof url !== 'string' || url.trim() === ''){
+        showMessage('I cannot verify this.', true);
+        return;
+      }
+      input.value = url;
+      downloadBtn.disabled = false;
+      showMessage('Link is ready.');
+    }catch(e){
+      showMessage('Failed to load the link.', true);
+    }
+  }
+
+  copyBtn.addEventListener('click', async () => {
+    const val = input.value.trim();
+    if(!val){ showMessage('No link to copy.', true); return; }
+    try{
+      await navigator.clipboard.writeText(val);
+      showMessage('Link copied to clipboard.');
+    }catch{
+      showMessage('Copy failed.', true);
+    }
+  });
+
+  downloadBtn.addEventListener('click', () => {
+    const url = input.value.trim();
+    if(!url){ showMessage('No link to download.', true); return; }
+    // Open in a new tab to trigger download or navigate directly.
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    // If the URL is a direct file, download attribute helps; otherwise the server headers control it.
+    a.download = '';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    showMessage('Download started (if the link is valid).');
+  });
+
+  // Load link on start
+  fetchLink();
+</script>
+</body>
+</html>
