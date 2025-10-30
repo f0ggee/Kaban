@@ -21,14 +21,13 @@ func Get_From(w http.ResponseWriter, r *http.Request) {
 		slog.Error("cookie don't send", err)
 		http.Error(w, "cookie dont sen", http.StatusUnauthorized)
 	}
-	slog.Info("eae")
 	if session.Options.MaxAge == 0 {
 		http.Redirect(w, r, "/login", http.StatusFound)
 	}
 
 	sa, ok := session.Values["cookie"]
 	if ok {
-		slog.Info("dsa", sa)
+		slog.Info("Cookie of user", sa)
 		http.Redirect(w, r, "/main", http.StatusMovedPermanently)
 
 	}

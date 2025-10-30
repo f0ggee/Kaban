@@ -2,6 +2,8 @@ package main
 
 import (
 	"Kaban/Controller"
+	"Kaban/Service/Handlers"
+	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"log"
@@ -31,13 +33,18 @@ func main() {
 		http.ServeFile(w, r, "Service/Fronted/Register.html")
 	})
 	router.HandleFunc("/main", func(writer http.ResponseWriter, request *http.Request) {
+
 		http.ServeFile(writer, request, "Service/Fronted/Main_Page.html")
 
 	})
-	router.HandleFunc("/URL/{file}", func(writer http.ResponseWriter, request *http.Request) {
+	//router.HandleFunc("/d/{namer}", func(writer http.ResponseWriter, request *http.Request) {
+	//
+	//	http.ServeFile(writer, request, "Service/Fronted/d.html")
+	//}).Methods(http.MethodGet)
+	router.HandleFunc("/URL/{name}", func(writer http.ResponseWriter, request *http.Request) {
 		http.ServeFile(writer, request, "Service/Fronted/UrlFronted.html")
 
-	})
+	}).Name("fileName")
 
 	err := godotenv.Load(".env")
 	if err != nil {
@@ -47,8 +54,19 @@ func main() {
 
 	router.HandleFunc("/login/api", Controller.Loging).Methods("POST")
 	router.HandleFunc("/register/api", Controller.Controller_Register).Methods("POST")
+	router.HandleFunc("/d/{name}", func(writer http.ResponseWriter, request *http.Request) {
+		ch := make(chan string)
+		var p Handlers.CustomError
+		Dow := p.ServiceDownload(writer, request)
+		if Dow.Err != nil {
+			slog.Info(Dow.Message)
+			return
+		}
+
+	}).Methods(http.MethodGet)
 
 	router.HandleFunc("/downloader/api", func(writer http.ResponseWriter, request *http.Request) {
+
 		Controller.ControlerFileUploader(writer, request, router)
 
 	}).Methods(http.MethodPost)
@@ -56,6 +74,17 @@ func main() {
 		Controller.Get_From(writer, request)
 
 	}).Methods("GET")
+	router.HandleFunc("/doUrl/api", func(writer http.ResponseWriter, request *http.Request) {
+
+		NameFile := Controller.CUrlUp(writer, request)
+		writer.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(writer).Encode(map[string]string{
+			"Url": "http://localhost:8080/" + "d/" + NameFile,
+		}); err != nil {
+			slog.Error("Json can't be treated -", err)
+			return
+		}
+	}).Methods(http.MethodGet)
 
 	err = http.ListenAndServe(":8080", router)
 	if err != nil {

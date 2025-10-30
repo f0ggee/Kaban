@@ -5,7 +5,8 @@ import (
 	"Kaban/Service/Uttiltesss"
 	"bytes"
 	"context"
-	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/gorilla/mux"
@@ -98,22 +99,15 @@ func FileUploader(w http.ResponseWriter, r *http.Request, router *mux.Router) er
 		slog.Error("Error in file it's too big  Uploader 2 ", err)
 		return err
 	}
-	name := fmt.Sprintf("string", sizeAndName.Filename)
-
-	if sizeAndName.Filename == "" {
-		fr := rand.Text()
-		name = fr
-	}
 
 	defer file.Close()
 
 	uploader := s3manager.NewUploader(s3)
-	slog.Info(sizeAndName.Filename)
 
 	bucket := "0c8f1ea9-b07f5996-b392-4227-961b-14d2a71a53dc"
 	up := &s3manager.UploadInput{
 		Bucket: &bucket,
-		Key:    &name,
+		Key:    &sizeAndName.Filename,
 		Body:   bytes.NewReader(f),
 	}
 	_, err = uploader.Upload(up)
@@ -122,13 +116,19 @@ func FileUploader(w http.ResponseWriter, r *http.Request, router *mux.Router) er
 	}
 	slog.Info("File succes upload :)")
 
-	//err = dropInTheUrl(name, router)
-	//if err != nil {
-	//	return err
-	//}
-
-	http.Redirect(w, r, fmt.Sprintf("/URL/%s", sizeAndName.Filename), http.StatusFound)
+	url, err := router.Get("fileName").URL("name", sizeAndName.Filename)
+	if err != nil {
+		slog.Error("Erro can't treate", err)
+		return err
+	}
+	http.Redirect(w, r, url.Path, http.StatusFound)
 
 	return nil
 
+}
+
+func Sha256(f []byte) string {
+	hash := sha256.Sum256(f)
+	h := hex.EncodeToString(hash[:])
+	return h
 }

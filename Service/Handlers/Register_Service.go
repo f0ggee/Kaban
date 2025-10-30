@@ -59,10 +59,10 @@ func aenerate_Cookie(ctx context.Context, unic_Id int, dbe *pgxpool.Pool, r *htt
 }
 
 func Register_Service(de *Dto.Handler_Registerr, w http.ResponseWriter, r *http.Request) {
-	var err error
 
 	ctx, Cancel := Uttiltesss.Contexte()
 	defer Cancel()
+
 	db, err := Connect_to_BD.Connect()
 	if err != nil {
 		slog.Error("Err_from_register 1 ", err)
