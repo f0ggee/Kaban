@@ -55,7 +55,7 @@ func main() {
 	router.HandleFunc("/login/api", Controller.Loging).Methods("POST")
 	router.HandleFunc("/register/api", Controller.Controller_Register).Methods("POST")
 	router.HandleFunc("/d/{name}", func(writer http.ResponseWriter, request *http.Request) {
-		ch := make(chan string)
+		//ch := make(chan string)
 		var p Handlers.CustomError
 		Dow := p.ServiceDownload(writer, request)
 		if Dow.Err != nil {

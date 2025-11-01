@@ -1,11 +1,10 @@
 package Uttiltesss
 
 import (
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"log/slog"
-
-	"github.com/aws/aws-sdk-go/aws"
 )
 
 func Inzelire() (*session.Session, error) {

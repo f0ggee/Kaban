@@ -26,7 +26,7 @@ func getNameFromUrl(r *http.Request) string {
 
 }
 
-func (d *CustomError) ServiceDownload(w http.ResponseWriter, r *http.Request, ch chan string) *CustomError {
+func (d *CustomError) ServiceDownload(w http.ResponseWriter, r *http.Request) *CustomError {
 
 	ctx, cancle := Uttiltesss.Contexte()
 	defer cancle()
@@ -68,6 +68,9 @@ func (d *CustomError) ServiceDownload(w http.ResponseWriter, r *http.Request, ch
 			Err:     err,
 		}
 	}
-	ch <- name
-	return nil
+	//ch <- name
+	return &CustomError{
+		Message: "Don't exist",
+		Err:     nil,
+	}
 }
