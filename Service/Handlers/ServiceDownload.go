@@ -21,7 +21,6 @@ func getNameFromUrl(r *http.Request) string {
 	vars := mux.Vars(r)
 
 	name := vars["name"]
-	slog.Info("File Name", name)
 	return name
 
 }

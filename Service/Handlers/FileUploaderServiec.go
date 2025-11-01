@@ -42,19 +42,9 @@ func FileUploader(w http.ResponseWriter, r *http.Request, router *mux.Router) er
 		return err
 	}
 
-	//s, err := Uttiltesss.Inzelire()
-	//if err != nil {
-	//	slog.Info("Can't set connection in s3 server", err)
-	//	return err
-	//}
 	ctx, cancel := Uttiltesss.Contexte()
 	defer cancel()
 
-	//hexString, err := getKey(r)
-	//if err != nil {
-	//	slog.Error("Error can't get scrypt from Database", err)
-	//	return
-	//}
 	sizeAndName, f, err2 := checkAndDownload(w, r, err)
 	if err2 != nil {
 		slog.Error("Error in fileUploader", err2)
