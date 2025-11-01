@@ -3,7 +3,6 @@ package Handlers
 import (
 	"Kaban/Service/Uttiltesss"
 	"bytes"
-	"fmt"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,25 +13,6 @@ import (
 	"mime/multipart"
 	"net/http"
 )
-
-func getCookie(r *http.Request) (string, error) {
-	session, err := store.Get(r, "token1")
-	if err != nil {
-		slog.Error("cookie don't send", err)
-		return "", err
-
-	}
-
-	cookie, ok := session.Values["cookie"]
-	if !ok {
-
-		slog.Error("Cookie don't set", err)
-		return "", err
-	}
-	s := fmt.Sprintf("string", cookie)
-
-	return s, nil
-}
 
 func FileUploader(w http.ResponseWriter, r *http.Request, router *mux.Router) error {
 
