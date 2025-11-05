@@ -8,7 +8,6 @@ import (
 	"github.com/joho/godotenv"
 	"log"
 	"log/slog"
-
 	"net/http"
 )
 
@@ -37,6 +36,10 @@ func main() {
 		http.ServeFile(writer, request, "Service/Fronted/Main_Page.html")
 
 	})
+	router.HandleFunc("/Wait", func(writer http.ResponseWriter, request *http.Request) {
+		http.ServeFile(writer, request, "Service/Fronted/WaitDownload.html")
+
+	})
 	//router.HandleFunc("/d/{namer}", func(writer http.ResponseWriter, request *http.Request) {
 	//
 	//	http.ServeFile(writer, request, "Service/Fronted/d.html")
@@ -55,13 +58,16 @@ func main() {
 	router.HandleFunc("/login/api", Controller.Loging).Methods("POST")
 	router.HandleFunc("/register/api", Controller.Controller_Register).Methods("POST")
 	router.HandleFunc("/d/{name}", func(writer http.ResponseWriter, request *http.Request) {
-		//ch := make(chan string)
 		var p Handlers.CustomError
-		Dow := p.ServiceDownload(writer, request)
+
+		ch := make(chan string)
+		Dow := p.ServiceDownload(ch, writer, request)
 		if Dow.Err != nil {
 			slog.Info(Dow.Message)
 			return
 		}
+
+		Handlers.Delete(ch)
 
 	}).Methods(http.MethodGet)
 

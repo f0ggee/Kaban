@@ -9,6 +9,8 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"strconv"
+
 	"os"
 )
 
@@ -25,7 +27,7 @@ func getNameFromUrl(r *http.Request) string {
 
 }
 
-func (d *CustomError) ServiceDownload(w http.ResponseWriter, r *http.Request) *CustomError {
+func (d *CustomError) ServiceDownload(ch chan string, w http.ResponseWriter, r *http.Request) *CustomError {
 
 	ctx, cancle := Uttiltesss.Contexte()
 	defer cancle()
@@ -53,12 +55,17 @@ func (d *CustomError) ServiceDownload(w http.ResponseWriter, r *http.Request) *C
 	o, err := downloader.GetObjectWithContext(ctx, &s3.GetObjectInput{
 		Bucket:      aws.String(bucket),
 		IfNoneMatch: aws.String(""),
-		Key:         aws.String(name),
+		Key:         &name,
 	})
+	if err != nil {
+		slog.Error("ServiceDownload:", err)
+		return nil
+	}
 	defer o.Body.Close()
 
 	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename= %v", name))
+	w.Header().Set("Content-Length", strconv.FormatInt(*o.ContentLength, 10))
 
 	if _, err = io.Copy(w, o.Body); err != nil {
 		slog.Error("Err In file Service Downloader", err)
@@ -67,7 +74,7 @@ func (d *CustomError) ServiceDownload(w http.ResponseWriter, r *http.Request) *C
 			Err:     err,
 		}
 	}
-	//ch <- name
+	ch <- name
 	return &CustomError{
 		Message: "Don't exist",
 		Err:     nil,

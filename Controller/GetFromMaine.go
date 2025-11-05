@@ -3,6 +3,7 @@ package Controller
 import (
 	"github.com/gorilla/sessions"
 	"log/slog"
+	"net"
 	"net/http"
 )
 
@@ -16,6 +17,15 @@ func Get_From(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	clientIP := r.RemoteAddr
+
+	host, _, err := net.SplitHostPort(clientIP)
+	if err != nil {
+		slog.Info("ee")
+		return
+	}
+	clientIP = host
+
 	session, err := store.Get(r, "token1")
 	if err != nil {
 		slog.Error("cookie don't send", err)
@@ -27,6 +37,7 @@ func Get_From(w http.ResponseWriter, r *http.Request) {
 
 	sa, ok := session.Values["cookie"]
 	if ok {
+
 		slog.Info("Cookie of user", sa)
 		http.Redirect(w, r, "/main", http.StatusMovedPermanently)
 

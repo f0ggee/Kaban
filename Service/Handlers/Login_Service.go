@@ -82,7 +82,7 @@ func Login_Service(s *Dto.Handler_Login, w http.ResponseWriter, r *http.Request)
 		password string
 	)
 
-	err = db.QueryRow(context.Background(), `SELECT unic_id ,password FROM person WHERE email=$1`, s.Email).Scan(&Unic_id, &password)
+	err = db.QueryRow(context.Background(), `SELECT unic_id ,password, FROM person WHERE email=$1`, s.Email).Scan(&Unic_id, &password)
 	err = Uttiltesss.Err_Treate(err, w)
 	if err != nil {
 		slog.Error("Func login 1 ", err)

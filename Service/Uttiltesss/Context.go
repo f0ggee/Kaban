@@ -7,6 +7,6 @@ import (
 
 func Contexte() (ctx context.Context, cancel context.CancelFunc) {
 
-	return context.WithTimeout(context.Background(), 5*time.Second)
+	return context.WithTimeout(context.Background(), 2*time.Minute)
 
 }
