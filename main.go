@@ -36,14 +36,11 @@ func main() {
 		http.ServeFile(writer, request, "Service/Fronted/Main_Page.html")
 
 	})
-	router.HandleFunc("/Wait", func(writer http.ResponseWriter, request *http.Request) {
+	router.HandleFunc("/wait", func(writer http.ResponseWriter, request *http.Request) {
 		http.ServeFile(writer, request, "Service/Fronted/WaitDownload.html")
 
 	})
-	//router.HandleFunc("/d/{namer}", func(writer http.ResponseWriter, request *http.Request) {
-	//
-	//	http.ServeFile(writer, request, "Service/Fronted/d.html")
-	//}).Methods(http.MethodGet)
+
 	router.HandleFunc("/URL/{name}", func(writer http.ResponseWriter, request *http.Request) {
 		http.ServeFile(writer, request, "Service/Fronted/UrlFronted.html")
 

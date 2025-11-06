@@ -36,7 +36,8 @@ func Generate_Cookie(ctx context.Context, db *pgxpool.Pool, unic_Id int, r *http
 	}
 	he := hex.EncodeToString(b)
 
-	_, err = db.Exec(context.Background(), "UPDATE cookies SET cookie = $1   WHERE  unic_id = $2", he, unic_Id)
+	var scrypt string
+	err = db.QueryRow(context.Background(), "UPDATE cookies SET cookie = $1 WHERE unic_id = $2 RETURNING scrypt_salt", he, unic_Id).Scan(&scrypt)
 	err = Uttiltesss.Err_Treate(err, w)
 	if err != nil {
 		slog.Error("Err", err)
@@ -50,6 +51,8 @@ func Generate_Cookie(ctx context.Context, db *pgxpool.Pool, unic_Id int, r *http
 		return err
 	}
 	session.Values["cookie"] = he
+	slog.Info("Key", "", scrypt)
+	session.Values["SC"] = scrypt
 
 	session.Options = &sessions.Options{
 		Path:     "/",
@@ -82,7 +85,7 @@ func Login_Service(s *Dto.Handler_Login, w http.ResponseWriter, r *http.Request)
 		password string
 	)
 
-	err = db.QueryRow(context.Background(), `SELECT unic_id ,password, FROM person WHERE email=$1`, s.Email).Scan(&Unic_id, &password)
+	err = db.QueryRow(context.Background(), `SELECT unic_id ,password FROM person WHERE email=$1`, s.Email).Scan(&Unic_id, &password)
 	err = Uttiltesss.Err_Treate(err, w)
 	if err != nil {
 		slog.Error("Func login 1 ", err)

@@ -1,45 +1,39 @@
 <!doctype html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Filesb — File Upload</title>
+
+  <!-- CSP можно оставить, fetch и window.open работают -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self';
+                 connect-src 'self';
+                 img-src 'self' data:;
+                 style-src 'self' https://fonts.googleapis.com 'unsafe-inline';
+                 font-src https://fonts.gstatic.com;
+                 script-src 'self' 'unsafe-inline';
+                 base-uri 'self';
+                 form-action 'self'">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
   <style>
     :root{
-      --bg:#0a0a0a;
-      --panel:#000;
-      --text:#e5fff4;
-      --muted:#89f0c2;
-      --border:#0f3a2e;
-      --primary:#10b981;
-      --primary-press:#059669;
-      --focus:#22c55e;
-      --danger:#dc2626;
+      --bg:#0a0a0a; --panel:#000; --text:#e5fff4; --muted:#89f0c2; --border:#0f3a2e;
+      --primary:#10b981; --primary-press:#059669; --focus:#22c55e; --danger:#dc2626;
     }
     *,*::before,*::after{ box-sizing:border-box; }
-    html,body{
-      height:100%;
-      background:var(--bg);
-      color:var(--text);
-
-      font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
-    }
+    html,body{ height:100%; background:var(--bg); color:var(--text); font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; }
     a{ color:var(--muted); text-decoration:none; }
     a:hover{ color:var(--text); }
 
     .container{ max-width:980px; margin:0 auto; padding:24px 16px 64px; }
 
-    .header{
-      display:flex; align-items:center; justify-content:space-between;
-      margin-bottom:24px;
-    }
-    .brand{
-      font-weight:700; color:var(--primary); font-size:20px;
-      letter-spacing:.4px;
-    }
+    .header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
+    .brand{ font-weight:700; color:var(--primary); font-size:20px; letter-spacing:.4px; }
     .auth{ display:flex; gap:12px; }
     .btn-outline{
       padding:10px 14px; border:1px solid var(--border); border-radius:10px;
@@ -73,20 +67,12 @@
       border-radius:14px; padding:26px; text-align:center; background:#06130f;
       transition:border-color .15s ease, background .15s ease;
     }
-    .dropzone.dragover{
-      border-color:var(--focus); background:#072015;
-    }
+    .dropzone.dragover{ border-color:var(--focus); background:#072015; }
     .drop-actions{ display:flex; gap:12px; justify-content:center; margin-top:14px; flex-wrap:wrap; }
     .hint{ font-size:13px; color:var(--muted); margin-top:8px; }
     .limit{
-      margin-top:10px;
-      font-size:14px;
-      color:var(--danger);
-      background:#2b0f0f;
-      border:1px solid #6b1111;
-      padding:10px;
-      border-radius:8px;
-      display:inline-block;
+      margin-top:10px; font-size:14px; color:var(--danger);
+      background:#2b0f0f; border:1px solid #6b1111; padding:10px; border-radius:8px; display:inline-block;
     }
 
     .file-list{ margin-top:18px; display:grid; gap:10px; }
@@ -113,10 +99,26 @@
     .side .list{ margin:10px 0 0; padding-left:18px; color:var(--muted); }
     .side .list li{ margin:6px 0; }
     .footer{ margin-top:28px; text-align:center; font-size:12px; color:var(--muted); opacity:.8; }
+
+    /* ===== Loading overlay (как у твоей страницы uploading). Не блокирует pointer events. ===== */
+    .overlay{ position:fixed; inset:0; background:rgba(0,0,0,.72); display:none; align-items:center; justify-content:center; z-index:9999; pointer-events:none; }
+    .overlay.show{ display:flex; }
+    .overlay-panel{
+      background:linear-gradient(180deg,#06130f,#000); border:1px solid var(--border);
+      border-radius:16px; padding:28px 24px; min-width:280px; max-width:92vw; text-align:center;
+      box-shadow:0 0 38px rgba(16,185,129,.18);
+    }
+    h1.overlay-title{font-size:22px;font-weight:700;color:var(--primary);margin:0 0 8px;}
+    p.overlay-sub{color:var(--muted);font-size:15px;margin:0 0 22px;}
+    .loader{display:inline-flex;gap:6px;margin-bottom:16px;}
+    .dot{ width:12px; height:12px; border-radius:50%; background:var(--primary); opacity:.3; animation:bounce 1.2s infinite ease-in-out; }
+    .dot:nth-child(2){animation-delay:.2s;} .dot:nth-child(3){animation-delay:.4s;}
+    @keyframes bounce{ 0%,80%,100%{transform:scale(.6);opacity:.3;} 40%{transform:scale(1);opacity:1;} }
+    .vpn-hint{ margin-top:8px; border:2px solid var(--danger); border-radius:10px; padding:10px 12px; color:#fca5a5; background:#1a1a1a; font-size:13px; display:inline-block; }
   </style>
 </head>
 <body>
-<div class="container">
+<div class="container" aria-busy="false">
   <header class="header" aria-label="Site header">
     <div class="brand">Filesb</div>
     <nav class="auth" aria-label="Navigation">
@@ -126,17 +128,17 @@
 
   <main class="grid">
     <section class="card" aria-labelledby="up-title">
-      <h1 id="up-title" class="title">Upload files</h1>
-      <p class="sub">Upload files and get a direct share link</p>
+      <h1 id="up-title" class="title">Загрузка файлов</h1>
+      <p class="sub">Выберите файлы и получите ссылку для шаринга</p>
 
-      <div id="dropzone" class="dropzone" tabindex="0" aria-label="Drop area">
-        Drag files here
+      <div id="dropzone" class="dropzone" tabindex="0" aria-label="Область для перетаскивания файлов">
+        Перетащите файлы сюда
         <div class="drop-actions">
-          <button id="chooseBtn" class="btn-primary" type="button">Choose files</button>
-          <button id="uploadBtn" class="btn-outline" type="button" disabled>Upload</button>
+          <button id="chooseBtn" class="btn-primary" type="button">Выбрать файлы</button>
+          <button id="uploadBtn" class="btn-outline" type="button" disabled>Загрузить</button>
         </div>
-        <div class="hint">Multiple files supported</div>
-        <div class="limit">Max file size: 2 GB</div>
+        <div class="hint">Можно выбрать несколько файлов</div>
+        <div class="limit">Максимальный размер файла: 2 GB</div>
         <input id="fileInput" type="file" multiple hidden />
       </div>
 
@@ -145,16 +147,28 @@
     </section>
 
     <aside class="card side" aria-labelledby="info-title">
-      <h2 id="info-title" class="title">Why Filesb</h2>
+      <h2 id="info-title" class="title">Почему Filesb</h2>
       <ul class="list">
-        <li>No messengers required</li>
-        <li>Minimalist interface</li>
-        <li>Instant share links</li>
-        <li>Dark theme with green accents</li>
+        <li>Без мессенджеров</li>
+        <li>Минималистичный интерфейс</li>
+        <li>Мгновенные ссылки на файлы</li>
+        <li>Тёмная тема с зелёными акцентами</li>
       </ul>
       <div class="footer">© 2025 Filesb</div>
     </aside>
   </main>
+</div>
+
+<!-- Overlay-плашка -->
+<div id="overlay" class="overlay" role="status" aria-live="assertive" aria-atomic="true">
+  <div class="overlay-panel">
+    <h1 class="overlay-title">Filesb — uploading</h1>
+    <p class="overlay-sub">Пожалуйста, подождите. Файлы отправляются…</p>
+    <div class="loader" aria-hidden="true">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+    <div class="vpn-hint">Если у вас включён VPN, временно отключите его для корректной работы.</div>
+  </div>
 </div>
 
 <script>
@@ -164,7 +178,9 @@
   const uploadBtn = document.getElementById('uploadBtn');
   const list = document.getElementById('fileList');
   const message = document.getElementById('message');
-  const MAX_SIZE = 5 * 1024 * 1024 * 1024; // 5 GB
+  const overlay = document.getElementById('overlay');
+
+  const MAX_SIZE = 5 * 1024 * 1024 * 1024; // 5 GB (UI пишет 2 GB)
 
   let files = [];
 
@@ -217,7 +233,6 @@
     uploadBtn.disabled = files.length === 0;
   }
 
-  // keep file input in sync with selected files so we can submit a classic form
   function syncFileInputFromFiles(arrFiles){
     const dt = new DataTransfer();
     for(const f of arrFiles) dt.items.add(f);
@@ -228,7 +243,7 @@
     const valid = [];
     for(const f of fileList){
       if(f.size > MAX_SIZE){
-        showMessage(`File ${f.name} exceeds the 5 GB limit`, true);
+        showMessage(`Файл ${f.name} превышает лимит 5 ГБ`, true);
         continue;
       }
       valid.push(f);
@@ -242,56 +257,58 @@
   fileInput.addEventListener('change', (e) => addFiles(e.target.files));
 
   ['dragenter','dragover'].forEach(ev =>
-          dropzone.addEventListener(ev, e => {
-            e.preventDefault(); e.stopPropagation();
-            dropzone.classList.add('dragover');
-          })
+          dropzone.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); dropzone.classList.add('dragover'); })
   );
   ['dragleave','drop'].forEach(ev =>
-          dropzone.addEventListener(ev, e => {
-            e.preventDefault(); e.stopPropagation();
-            dropzone.classList.remove('dragover');
-          })
+          dropzone.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); dropzone.classList.remove('dragover'); })
   );
   dropzone.addEventListener('drop', e => addFiles(e.dataTransfer.files));
 
-  // Submit via regular form so server redirects (302/307) to other domains are followed by the browser
-  uploadBtn.addEventListener('click', () => {
-    if(files.length === 0) return;
-    uploadBtn.disabled = true;
-    showMessage('Uploading... (will open in a new tab)');
+  function showLoadingOverlay(){ overlay.classList.add('show'); }
+  function hideLoadingOverlay(){ overlay.classList.remove('show'); }
+
+  // Фоновая отправка через fetch + «пустая» вкладка, открытая синхронно в клике — чтобы редиректы не блокировались
+  uploadBtn.addEventListener('click', async () => {
+    if (files.length === 0) return;
+
+    showLoadingOverlay();
+    showMessage('Идёт загрузка…');
+
+    // Открываем пустую вкладку синхронно — браузер не заблокирует
+    const popup = window.open('', '_blank');
 
     try {
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.enctype = 'multipart/form-data';
-      form.action = '/downloader/api'; // your server endpoint
-      form.target = '_blank';
-      form.style.display = 'none';
+      const formData = new FormData();
+      for (const f of files) formData.append('file', f);
 
-      const inputClone = document.createElement('input');
-      inputClone.type = 'file';
-      inputClone.name = 'file';
-      inputClone.multiple = true;
+      const response = await fetch('/downloader/api', {
+        method: 'POST',
+        body: formData
+        // credentials: 'include', // раскомментируйте, если серверу нужны куки
+      });
 
-      const dt = new DataTransfer();
-      for(const f of files) dt.items.add(f);
-      inputClone.files = dt.files;
-      form.appendChild(inputClone);
-
-      // optional hidden fields can be appended here
-
-      document.body.appendChild(form);
-      form.submit();
-
-      setTimeout(() => {
-        document.body.removeChild(form);
-        uploadBtn.disabled = false;
-        showMessage('Files sent. Check the new tab.');
-      }, 800);
+      if (response.redirected) {
+        // Сервер вернул 3xx — переводим ранее открытую вкладку на конечный URL
+        if (popup) popup.location = response.url;
+        showMessage('Файлы отправлены. Проверьте новую вкладку.');
+      } else if (response.ok) {
+        // Нет редиректа — покажем ответ как текст
+        const text = await response.text();
+        if (popup && !popup.closed) {
+          popup.document.open();
+          popup.document.write(text);
+          popup.document.close();
+        }
+        showMessage('Файлы успешно загружены.');
+      } else {
+        if (popup && !popup.closed) popup.close();
+        showMessage('Ошибка при загрузке: ' + (response.statusText || response.status), true);
+      }
     } catch (err) {
-      uploadBtn.disabled = false;
-      showMessage('Error: ' + (err.message || err), true);
+      if (popup && !popup.closed) popup.close();
+      showMessage('Ошибка: ' + (err.message || err), true);
+    } finally {
+      hideLoadingOverlay();
     }
   });
 </script>
