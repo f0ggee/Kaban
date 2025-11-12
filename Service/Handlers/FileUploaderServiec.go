@@ -2,14 +2,28 @@ package Handlers
 
 import (
 	"Kaban/Service/Uttiltesss"
+	"bufio"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"encoding/hex"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go/aws"
+	"io"
 	"log/slog"
+	"mime/multipart"
 	"net/http"
 )
 
-func FileUploader(w http.ResponseWriter, r *http.Request, SC string) (string, error) {
+var n []byte
+var Nonce = make(map[string]string)
+
+func FileUploader(w http.ResponseWriter, r *http.Request, sc string) (string, error) {
+
+	reader, writer := io.Pipe()
+
+	ch := make(chan []byte)
 
 	file, sizeAndName, err := r.FormFile("file")
 	if err != nil {
@@ -30,10 +44,15 @@ func FileUploader(w http.ResponseWriter, r *http.Request, SC string) (string, er
 		return "", err
 	}
 
-	//cip, err2 := Encrypt(err, SC, file)
-	//if err2 != nil {
-	//	return "", err2
-	//}
+	go func() {
+		defer writer.Close()
+		err = Encrypt(ch, sc, file, writer)
+		if err != nil {
+			writer.CloseWithError(err)
+
+		}
+
+	}()
 
 	ctx, cancel := Uttiltesss.Contexte()
 	defer cancel()
@@ -48,12 +67,16 @@ func FileUploader(w http.ResponseWriter, r *http.Request, SC string) (string, er
 	_, err = uploade.Upload(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(sizeAndName.Filename),
-		Body:   file,
+		Body:   reader,
 	})
 	if err != nil {
 		slog.Error("Error in uploader", err)
 		return "", err
 	}
+
+	nonce := <-ch
+	n = nonce
+	//Nonce[sizeAndName.Filename] = hex.EncodeToString(nonce)
 
 	slog.Info("File succes upload :)")
 
@@ -61,36 +84,55 @@ func FileUploader(w http.ResponseWriter, r *http.Request, SC string) (string, er
 
 }
 
-//func Encrypt(err error, SC string, file multipart.File) ([]byte, error) {
-//	Sc, err := hex.DecodeString(SC)
-//	if err != nil {
-//		slog.Error("Error Decode string", err)
-//		return nil, err
-//	}
-//	slog.Info("Key", "KEY", Sc)
-//	block, err := aes.NewCipher(Sc)
-//	if err != nil {
-//		slog.Error("Error in Create New Block", err)
-//		return nil, err
-//	}
-//	gcm, err := cipher.NewGCM(block)
-//	if err != nil {
-//		slog.Error("Error in create GCM mode", err)
-//		return nil, err
-//	}
-//
-//	nonce := make([]byte, gcm.NonceSize())
-//
-//	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-//		slog.Error("Error in creating nonce", err)
-//		return nil, err
-//	}
-//	pl, err := io.ReadAll(file)
-//	if err != nil {
-//		slog.Error("errs", err)
-//		return nil, err
-//	}
-//
-//	cip := gcm.Seal(nonce, nonce, pl, nonce)
-//	return cip, nil
-//}
+func Encrypt(ch chan []byte, SC string, file multipart.File, writer io.Writer) error {
+	Sc, err := hex.DecodeString(SC)
+	if err != nil {
+		slog.Error("Error Decode string", err)
+		return err
+	}
+	block, err := aes.NewCipher(Sc)
+	if err != nil {
+		slog.Error("Error in Create New Block", err)
+		return err
+	}
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		slog.Error("Error in create GCM mode", err)
+		return err
+	}
+
+	nonce := make([]byte, gcm.NonceSize())
+
+	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
+		slog.Error("Error in creating nonce", err)
+		return err
+	}
+
+	p := make([]byte, 10)
+	ze := bufio.NewReader(file)
+
+	for {
+		n, err := ze.Read(p)
+		if n > 0 {
+			cipherT := gcm.Seal(nil, nonce, p, nil)
+			_, errW := writer.Write(cipherT)
+			if errW != nil {
+				slog.Error("Error in 108", err)
+				return errW
+			}
+		}
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			slog.Error("Error", "error ", err)
+			return err
+		}
+
+	}
+
+	go func() {
+		ch <- nonce
+	}()
+	return nil
+}
