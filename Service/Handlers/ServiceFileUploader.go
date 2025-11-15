@@ -14,15 +14,17 @@ import (
 	"log/slog"
 	"mime/multipart"
 	"net/http"
+	"time"
 )
 
-var n []byte
-var Nonce = make(map[string]string)
+var Nonce = make(map[string]Data)
+var n string
 
 func FileUploader(w http.ResponseWriter, r *http.Request, sc string) (string, error) {
+	ctx, cancel := Uttiltesss.Contexte()
+	defer cancel()
 
 	reader, writer := io.Pipe()
-
 	ch := make(chan []byte)
 
 	file, sizeAndName, err := r.FormFile("file")
@@ -31,10 +33,17 @@ func FileUploader(w http.ResponseWriter, r *http.Request, sc string) (string, er
 		http.Error(w, "Error", http.StatusNotFound)
 		return "", err
 	}
-	defer file.Close()
-	if sizeAndName.Size > 5000000000 {
-		http.Error(w, "File can't be treate", http.StatusUnauthorized)
-		slog.Error("Error in file it's too big  Uploader 2 ", err)
+	defer func() {
+		err = file.Close()
+		if err != nil {
+			slog.Error("Err, cant' close a file", "err", err)
+			return
+		}
+	}()
+
+	err = CheckFileSize(w, sizeAndName, err)
+	if err != nil {
+		slog.Error("Error in Check File size", err)
 		return "", err
 	}
 
@@ -48,23 +57,23 @@ func FileUploader(w http.ResponseWriter, r *http.Request, sc string) (string, er
 		defer writer.Close()
 		err = Encrypt(ch, sc, file, writer)
 		if err != nil {
-			writer.CloseWithError(err)
+			err := writer.CloseWithError(err)
+			if err != nil {
+				slog.Error("Error in file writing", err)
+				return
+			}
 
 		}
-
 	}()
 
-	ctx, cancel := Uttiltesss.Contexte()
-	defer cancel()
-
 	bucket := "0c8f1ea9-b07f5996-b392-4227-961b-14d2a71a53dc"
-	uploade := manager.NewUploader(cfg, func(uploader *manager.Uploader) {
+	uploader := manager.NewUploader(cfg, func(uploader *manager.Uploader) {
 		uploader.MaxUploadParts = 1000
 		uploader.PartSize = 10 * 1024 * 1024
 		uploader.Concurrency = 25
 	})
 
-	_, err = uploade.Upload(ctx, &s3.PutObjectInput{
+	_, err = uploader.Upload(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(sizeAndName.Filename),
 		Body:   reader,
@@ -73,15 +82,23 @@ func FileUploader(w http.ResponseWriter, r *http.Request, sc string) (string, er
 		slog.Error("Error in uploader", err)
 		return "", err
 	}
-
 	nonce := <-ch
-	n = nonce
-	//Nonce[sizeAndName.Filename] = hex.EncodeToString(nonce)
 
-	slog.Info("File succes upload :)")
+	Nonce[sizeAndName.Filename] = Data{Nonce: nonce, Time: time.Now()}
+
+	slog.Info("File success upload :)")
 
 	return sizeAndName.Filename, nil
 
+}
+
+func CheckFileSize(w http.ResponseWriter, sizeAndName *multipart.FileHeader, err error) error {
+	if sizeAndName.Size > 2000000000 {
+		http.Error(w, "File can't be treating", http.StatusUnauthorized)
+		slog.Error("Error in file it's too big  Uploader 2 ", err)
+		return err
+	}
+	return nil
 }
 
 func Encrypt(ch chan []byte, SC string, file multipart.File, writer io.Writer) error {
@@ -108,13 +125,13 @@ func Encrypt(ch chan []byte, SC string, file multipart.File, writer io.Writer) e
 		return err
 	}
 
-	p := make([]byte, 10)
+	p := make([]byte, 64*1024)
 	ze := bufio.NewReader(file)
 
 	for {
 		n, err := ze.Read(p)
 		if n > 0 {
-			cipherT := gcm.Seal(nil, nonce, p, nil)
+			cipherT := gcm.Seal(nil, nonce, p[:n], nil)
 			_, errW := writer.Write(cipherT)
 			if errW != nil {
 				slog.Error("Error in 108", err)
@@ -132,6 +149,7 @@ func Encrypt(ch chan []byte, SC string, file multipart.File, writer io.Writer) e
 	}
 
 	go func() {
+
 		ch <- nonce
 	}()
 	return nil
