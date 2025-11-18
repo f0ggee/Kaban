@@ -2,7 +2,6 @@ package main
 
 import (
 	"Kaban/Controller"
-	"Kaban/Service/Handlers"
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -55,16 +54,10 @@ func main() {
 	router.HandleFunc("/login/api", Controller.Loging).Methods("POST")
 	router.HandleFunc("/register/api", Controller.Controller_Register).Methods("POST")
 	router.HandleFunc("/d/{name}", func(writer http.ResponseWriter, request *http.Request) {
-		var p Handlers.CustomError
 
-		ch := make(chan string)
-		Dow := p.ServiceDownload(ch, writer, request)
-		if Dow.Err != nil {
-			slog.Info(Dow.Message)
-			return
-		}
+		Controller.ControllerDownload(writer, request)
 
-		Handlers.Delete(ch)
+		//Handlers.Delete(ch)
 
 	}).Methods(http.MethodGet)
 

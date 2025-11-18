@@ -2,7 +2,6 @@ package Handlers
 
 import (
 	"Kaban/Service/Uttiltesss"
-	"bufio"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -14,10 +13,8 @@ import (
 	"log/slog"
 	"mime/multipart"
 	"net/http"
-	"time"
 )
 
-var Nonce = make(map[string]Data)
 var n string
 
 func FileUploader(w http.ResponseWriter, r *http.Request, sc string) (string, error) {
@@ -25,7 +22,6 @@ func FileUploader(w http.ResponseWriter, r *http.Request, sc string) (string, er
 	defer cancel()
 
 	reader, writer := io.Pipe()
-	ch := make(chan []byte)
 
 	file, sizeAndName, err := r.FormFile("file")
 	if err != nil {
@@ -55,7 +51,7 @@ func FileUploader(w http.ResponseWriter, r *http.Request, sc string) (string, er
 
 	go func() {
 		defer writer.Close()
-		err = Encrypt(ch, sc, file, writer)
+		err = Encrypt(sc, file, writer)
 		if err != nil {
 			err := writer.CloseWithError(err)
 			if err != nil {
@@ -82,12 +78,13 @@ func FileUploader(w http.ResponseWriter, r *http.Request, sc string) (string, er
 		slog.Error("Error in uploader", err)
 		return "", err
 	}
-	nonce := <-ch
-
-	Nonce[sizeAndName.Filename] = Data{Nonce: nonce, Time: time.Now()}
 
 	slog.Info("File success upload :)")
 
+	go func() {
+		Nonce = make(map[string]string)
+		Nonce[sizeAndName.Filename] = sc
+	}()
 	return sizeAndName.Filename, nil
 
 }
@@ -101,56 +98,40 @@ func CheckFileSize(w http.ResponseWriter, sizeAndName *multipart.FileHeader, err
 	return nil
 }
 
-func Encrypt(ch chan []byte, SC string, file multipart.File, writer io.Writer) error {
+func Encrypt(SC string, file multipart.File, writer io.Writer) error {
 	Sc, err := hex.DecodeString(SC)
 	if err != nil {
 		slog.Error("Error Decode string", err)
 		return err
 	}
+
 	block, err := aes.NewCipher(Sc)
 	if err != nil {
-		slog.Error("Error in Create New Block", err)
-		return err
-	}
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		slog.Error("Error in create GCM mode", err)
+		slog.Error("err create a NewCipher")
 		return err
 	}
 
-	nonce := make([]byte, gcm.NonceSize())
-
-	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
-		slog.Error("Error in creating nonce", err)
+	nonce := make([]byte, aes.BlockSize)
+	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
 		return err
 	}
 
-	p := make([]byte, 64*1024)
-	ze := bufio.NewReader(file)
-
+	stream := cipher.NewCTR(block, nonce)
+	buf := make([]byte, 32*1024)
+	writer.Write(nonce)
 	for {
-		n, err := ze.Read(p)
-		if n > 0 {
-			cipherT := gcm.Seal(nil, nonce, p[:n], nil)
-			_, errW := writer.Write(cipherT)
-			if errW != nil {
-				slog.Error("Error in 108", err)
-				return errW
-			}
+		n, err := file.Read(buf)
+		if err != nil && err != io.EOF {
+			slog.Error("Error in file upload", err)
+			return err
 		}
 		if err == io.EOF {
 			break
 		}
-		if err != nil {
-			slog.Error("Error", "error ", err)
-			return err
-		}
+		stream.XORKeyStream(buf[:n], buf[:n])
+		writer.Write(buf[:n])
 
 	}
 
-	go func() {
-
-		ch <- nonce
-	}()
 	return nil
 }

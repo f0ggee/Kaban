@@ -3,10 +3,10 @@ package Controller
 import (
 	"Kaban/Service/Handlers"
 	"errors"
+	"fmt"
 	"github.com/gorilla/mux"
 	"log/slog"
 	"net/http"
-	"time"
 )
 
 func ControlerFileUploader(w http.ResponseWriter, r *http.Request, router *mux.Router) {
@@ -18,14 +18,12 @@ func ControlerFileUploader(w http.ResponseWriter, r *http.Request, router *mux.R
 
 	SC, err := CookiGet(w, r)
 	if err != nil {
-		slog.Error("Error cant ControlerFileUploader", err)
-		return
+		http.Error(w, "Cookie don't find", http.StatusNotFound)
+
 	}
 
-	timeR := time.Now()
 	filName, err := Handlers.FileUploader(w, r, SC)
 	if err != nil {
-		slog.Error("Error in file uploader", err)
 		return
 	}
 
@@ -34,8 +32,7 @@ func ControlerFileUploader(w http.ResponseWriter, r *http.Request, router *mux.R
 		slog.Error("Error can't treate", err)
 		return
 	}
-	e := time.Since(timeR)
-	slog.Info("Work of function - ", "time:", e)
+
 	slog.Info(url.Path)
 	http.Redirect(w, r, url.Path, http.StatusFound)
 
@@ -48,13 +45,18 @@ func CookiGet(w http.ResponseWriter, r *http.Request) (string, error) {
 		http.Error(w, "cookie dont sen", http.StatusUnauthorized)
 		return "", err
 	}
-	if session.Options.MaxAge == 0 {
+
+	_, ok := session.Values["cookie"]
+	if !ok {
 		http.Redirect(w, r, "/login", http.StatusFound)
+
 	}
-	SC, ok := session.Values["SC"].(string)
+	SC, ok := session.Values["SW"]
 	if !ok {
 		slog.Error("Err", "EXIST:", ok)
 		return "", errors.New("SC don't set")
 	}
-	return SC, err
+
+	scs := fmt.Sprint(SC)
+	return scs, err
 }
