@@ -9,10 +9,9 @@ import (
 	"os"
 )
 
-func Delete(ch chan string) {
+func Delete(nameOfKey string) {
 
 	slog.Info("I'm here ")
-	name := <-ch
 	s, err := Uttiltesss.Inzelire2()
 	if err != nil {
 		slog.Error("Eror in func Delete file", "err", err)
@@ -23,14 +22,20 @@ func Delete(ch chan string) {
 
 	params := s3.DeleteObjectInput{
 		Bucket: aws.String(os.Getenv("BUCKET")),
-		Key:    aws.String(name),
+		Key:    aws.String(nameOfKey),
 	}
-	sz, err := s.DeleteObject(ctx, &params)
+	_, err = s.DeleteObject(ctx, &params)
 	if err != nil {
 		slog.Error("Error in Delete file 2", err)
 		return
 	}
 
-	slog.Info("Result", "res", sz.ResultMetadata)
+	if _, ok := Nonce[nameOfKey]; ok {
+		delete(Nonce, nameOfKey)
 
+	} else {
+		slog.Info("Result", "Delete", false)
+	}
+
+	slog.Info("Result", "Delete", true)
 }

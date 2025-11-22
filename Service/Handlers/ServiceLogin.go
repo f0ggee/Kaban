@@ -37,12 +37,14 @@ func Generate_Cookie(ctx context.Context, db *pgxpool.Pool, unic_Id int, r *http
 	he := hex.EncodeToString(b)
 
 	var scrypt string
-	err = db.QueryRow(context.Background(), "UPDATE cookies SET cookie = $1 WHERE unic_id = $2 RETURNING scrypt_salt", he, unic_Id).Scan(&scrypt)
+	err = db.QueryRow(context.Background(), "UPDATE cookies SET cookie = $1 WHERE unic_id = $2", he, unic_Id).Scan(nil)
 	err = Uttiltesss.Err_Treate(err, w)
 	if err != nil {
 		slog.Error("Err", err)
 		return err
 	}
+
+	err = db.QueryRow(context.Background(), "SELECT scrypt_salt FROM person WHERE unic_id = $1", unic_Id).Scan(&scrypt)
 
 	session, err := store.Get(r, "token1")
 	if err != nil {
@@ -50,9 +52,10 @@ func Generate_Cookie(ctx context.Context, db *pgxpool.Pool, unic_Id int, r *http
 		http.Error(w, "cookie dont sen", http.StatusUnauthorized)
 		return err
 	}
+	slog.Info(scrypt)
 	session.Values["cookie"] = he
-	slog.Info("Key", "", scrypt)
-	session.Values["SC"] = scrypt
+	session.Values["SW"] = scrypt
+	n = scrypt
 
 	session.Options = &sessions.Options{
 		Path:     "/",
