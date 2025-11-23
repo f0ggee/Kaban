@@ -34,7 +34,7 @@ func getNameFromUrl(r *http.Request) string {
 	return name
 
 }
-func ControllerDownload(w http.ResponseWriter, r *http.Request) {
+func DownloadWithEncrypt(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodGet {
 		http.Error(w, "Status method don't allow", http.StatusBadRequest)
@@ -49,7 +49,7 @@ func ControllerDownload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := Handlers.ServiceDownload(w, r, sc, name)
+	err := Handlers.SDownloadEncrypt(w, r, sc, name)
 	if err != nil {
 		_, err = fmt.Fprintf(w, "Can't dowload file")
 		http.Error(w, "Error because"+fmt.Sprint(err), http.StatusBadRequest)

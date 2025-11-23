@@ -27,7 +27,7 @@ func aenerate_Cookie(ctx context.Context, unic_Id int, dbe *pgxpool.Pool, r *htt
 	}
 	he := hex.EncodeToString(b)
 
-	_, err = dbe.Exec(context.Background(), "UPDATE person SET cookie = $1   WHERE  unic_id = $2", he, unic_Id)
+	err = dbe.QueryRow(context.Background(), "INSERT INTO user_cookie(iduser,cookie) VALUES($1,$2)", unic_Id, he).Scan(nil)
 	err = Uttiltesss.Err_Treate(err, w)
 	if err != nil {
 		slog.Error("Err", err)
@@ -41,6 +41,7 @@ func aenerate_Cookie(ctx context.Context, unic_Id int, dbe *pgxpool.Pool, r *htt
 		return err
 	}
 	session.Values["cookie"] = he
+	session.Values["SW"] = he
 	session.Options = &sessions.Options{
 		Path:     "/",
 		MaxAge:   int((24 * time.Hour).Seconds()),

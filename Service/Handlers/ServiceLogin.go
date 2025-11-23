@@ -2,6 +2,7 @@ package Handlers
 
 import (
 	"Kaban/Dto"
+	"Kaban/InfrastructureLayer"
 	"Kaban/Service/Connect_to_BD"
 	"Kaban/Service/Uttiltesss"
 	"context"
@@ -25,6 +26,7 @@ func Login_Check(password string, hash_of_password string) error {
 	return nil
 
 }
+
 func Generate_Cookie(ctx context.Context, db *pgxpool.Pool, unic_Id int, r *http.Request, w http.ResponseWriter) error {
 
 	b := make([]byte, 16)
@@ -34,28 +36,24 @@ func Generate_Cookie(ctx context.Context, db *pgxpool.Pool, unic_Id int, r *http
 		return err
 
 	}
-	he := hex.EncodeToString(b)
 
-	var scrypt string
-	err = db.QueryRow(context.Background(), "UPDATE cookies SET cookie = $1 WHERE unic_id = $2", he, unic_Id).Scan(nil)
-	err = Uttiltesss.Err_Treate(err, w)
+	Cookie := hex.EncodeToString(b)
+
+	app := Di(db)
+
+	scrypt, err := app.Re.UpDateCookie(ctx, Cookie, unic_Id)
 	if err != nil {
-		slog.Error("Err", err)
 		return err
 	}
-
-	err = db.QueryRow(context.Background(), "SELECT scrypt_salt FROM person WHERE unic_id = $1", unic_Id).Scan(&scrypt)
-
 	session, err := store.Get(r, "token1")
 	if err != nil {
 		slog.Error("cookie don't send", err)
 		http.Error(w, "cookie dont sen", http.StatusUnauthorized)
 		return err
 	}
-	slog.Info(scrypt)
-	session.Values["cookie"] = he
-	session.Values["SW"] = scrypt
-	n = scrypt
+	session.Values["cookie"] = Cookie
+	slog.Info("Key", "", scrypt)
+	session.Values["SC"] = scrypt
 
 	session.Options = &sessions.Options{
 		Path:     "/",
@@ -72,6 +70,12 @@ func Generate_Cookie(ctx context.Context, db *pgxpool.Pool, unic_Id int, r *http
 	}
 	return nil
 
+}
+
+func Di(db *pgxpool.Pool) *InfrastructureLayer.ConnectToBd {
+	S := &InfrastructureLayer.DB{Db: db}
+	app := InfrastructureLayer.NewUserService(S)
+	return app
 }
 
 func Login_Service(s *Dto.Handler_Login, w http.ResponseWriter, r *http.Request) {
