@@ -119,7 +119,7 @@
         <button id="downloadBtn" class="btn-primary" type="button" aria-label="Download file" disabled>Download</button>
       </div>
 
-      <div class="hint">This link is fetched automatically from /doUrl/api using your name from the path /URL/{name}.</div>
+      <div class="hint">This link is fetched automatically from /doUrl/api using your parameters from the path /URL/{name}/{bool}.</div>
 
       <div id="message" class="message" role="status" aria-live="polite"></div>
     </section>
@@ -129,7 +129,6 @@
 </div>
 
 <script>
-  // Константа для API
   const LINK_ENDPOINT = '/doUrl/api';
 
   const input = document.getElementById('linkInput');
@@ -142,22 +141,23 @@
     message.className = 'message show' + (isError ? ' error' : '');
   }
 
-  // Извлекаем name из пути /URL/{name}
-  function getNameFromPath() {
-    const match = window.location.pathname.match(/\/URL\/([^\/?#]+)/i);
-    return match ? decodeURIComponent(match[1]) : '';
+  // Извлекаем name и bool из пути /URL/{name}/{bool}
+  function getParamsFromPath() {
+    const match = window.location.pathname.match(/\/URL\/([^\/?#]+)\/([^\/?#]+)/i);
+    return match
+            ? { name: decodeURIComponent(match[1]), bool: decodeURIComponent(match[2]) }
+            : { name: '', bool: '' };
   }
 
-  // Отправляем GET-запрос на /doUrl/api?name={name}
   async function fetchLink() {
     try {
-      const name = getNameFromPath();
-      if (!name) {
-        showMessage('Parameter "name" not found in URL.', true);
-        return;
-      }
+      const { name, bool } = getParamsFromPath();
 
-      const endpoint = `${LINK_ENDPOINT}?name=${encodeURIComponent(name)}`;
+      if (!name) return showMessage('Parameter "name" not found in URL.', true);
+      if (!bool) return showMessage('Parameter "bool" not found in URL.', true);
+
+      const endpoint =
+              `${LINK_ENDPOINT}?name=${encodeURIComponent(name)}&bool=${encodeURIComponent(bool)}`;
 
       const res = await fetch(endpoint, {
         method: 'GET',
@@ -184,7 +184,8 @@
 
   copyBtn.addEventListener('click', async () => {
     const val = input.value.trim();
-    if (!val) { showMessage('No link to copy.', true); return; }
+    if (!val) return showMessage('No link to copy.', true);
+
     try {
       await navigator.clipboard.writeText(val);
       showMessage('Link copied to clipboard.');
@@ -195,7 +196,8 @@
 
   downloadBtn.addEventListener('click', () => {
     const url = input.value.trim();
-    if (!url) { showMessage('No link to download.', true); return; }
+    if (!url) return showMessage('No link to download.', true);
+
     const a = document.createElement('a');
     a.href = url;
     a.target = '_blank';
@@ -204,10 +206,10 @@
     document.body.appendChild(a);
     a.click();
     a.remove();
+
     showMessage('Download started (if the link is valid).');
   });
 
-  // Автоматически вызываем запрос при загрузке страницы
   fetchLink();
 </script>
 </body>

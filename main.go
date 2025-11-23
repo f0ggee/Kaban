@@ -2,7 +2,6 @@ package main
 
 import (
 	"Kaban/Controller"
-	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"log"
@@ -39,8 +38,12 @@ func main() {
 		http.ServeFile(writer, request, "Service/Fronted/WaitDownload.html")
 
 	})
+	router.HandleFunc("/protect", func(writer http.ResponseWriter, request *http.Request) {
+		http.ServeFile(writer, request, "Service/Fronted/Protecion.html")
 
-	router.HandleFunc("/URL/{name}", func(writer http.ResponseWriter, request *http.Request) {
+	})
+
+	router.HandleFunc("/URL/{name}/{bool}", func(writer http.ResponseWriter, request *http.Request) {
 		http.ServeFile(writer, request, "Service/Fronted/UrlFronted.html")
 
 	}).Name("fileName")
@@ -53,9 +56,17 @@ func main() {
 
 	router.HandleFunc("/login/api", Controller.Loging).Methods("POST")
 	router.HandleFunc("/register/api", Controller.Controller_Register).Methods("POST")
+
+	router.HandleFunc("/d2/{name}", func(writer http.ResponseWriter, request *http.Request) {
+
+		Controller.DownloadWithEncrypt(writer, request)
+
+		//Handlers.Delete(ch)
+
+	}).Methods(http.MethodGet)
 	router.HandleFunc("/d/{name}", func(writer http.ResponseWriter, request *http.Request) {
 
-		Controller.ControllerDownload(writer, request)
+		Controller.DownloadWithNonEcnrypt(writer, request)
 
 		//Handlers.Delete(ch)
 
@@ -63,7 +74,12 @@ func main() {
 
 	router.HandleFunc("/downloader/api", func(writer http.ResponseWriter, request *http.Request) {
 
-		Controller.ControlerFileUploader(writer, request, router)
+		Controller.ControlerFileUploaderNoEncrypt(writer, request, router)
+
+	}).Methods(http.MethodPost)
+	router.HandleFunc("/downloader2/api", func(writer http.ResponseWriter, request *http.Request) {
+
+		Controller.ControlerFileUploaderEncrypt(writer, request, router)
 
 	}).Methods(http.MethodPost)
 	router.HandleFunc("/maine/api", func(writer http.ResponseWriter, request *http.Request) {
@@ -72,14 +88,8 @@ func main() {
 	}).Methods("GET")
 	router.HandleFunc("/doUrl/api", func(writer http.ResponseWriter, request *http.Request) {
 
-		NameFile := Controller.CUrlUp(writer, request)
-		writer.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(writer).Encode(map[string]string{
-			"Url": "http://localhost:8080/" + "d/" + NameFile,
-		}); err != nil {
-			slog.Error("Json can't be treated -", err)
-			return
-		}
+		Controller.CUrlUp(writer, request)
+
 	}).Methods(http.MethodGet)
 
 	err = http.ListenAndServe(":8080", router)

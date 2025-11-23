@@ -23,7 +23,7 @@ type CustomError struct {
 	Err     error
 }
 
-func ServiceDownload(w http.ResponseWriter, r *http.Request, sc string, name string) error {
+func SDownloadEncrypt(w http.ResponseWriter, r *http.Request, sc string, name string) error {
 
 	ctx, cancle := Uttiltesss.Contexte()
 	defer cancle()
@@ -76,7 +76,7 @@ func ServiceDownload(w http.ResponseWriter, r *http.Request, sc string, name str
 	w.Header().Set("Content-Length", strconv.FormatInt(*o.ContentLength-aes.BlockSize, 10))
 
 	if _, err = io.Copy(w, Reader); err != nil {
-		slog.Error("Err In file Service Downloader", err)
+		slog.Error("Err In file Service Downloader Encypt", "err", err)
 		return err
 	}
 

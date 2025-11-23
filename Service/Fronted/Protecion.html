@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Filesb — Protection</title>
+
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self';
+                 connect-src 'self';
+                 img-src 'self' data:;
+                 style-src 'self' https://fonts.googleapis.com 'unsafe-inline';
+                 font-src https://fonts.gstatic.com;
+                 script-src 'self' 'unsafe-inline';
+                 base-uri 'self';
+                 form-action 'self'">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg:#0a0a0a; --panel:#000; --text:#e5fff4; --muted:#89f0c2; --border:#0f3a2e;
+      --primary:#10b981; --primary-press:#059669; --focus:#22c55e; --danger:#dc2626;
+    }
+
+    *, *::before, *::after { box-sizing:border-box; }
+
+    html, body {
+      height:100%;
+      background:var(--bg);
+      color:var(--text);
+      font-family:"Inter", system-ui;
+    }
+
+    .container {
+      max-width:980px;
+      margin:0 auto;
+      padding:24px 16px 64px;
+    }
+
+    .card {
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:24px;
+      margin-bottom:24px;
+      box-shadow:0 0 28px rgba(16,185,129,.12);
+    }
+
+    .title {
+      color:var(--primary);
+      font-size:26px;
+      font-weight:700;
+      margin-bottom:12px;
+    }
+
+    .sub {
+      color:var(--muted);
+      margin-bottom:16px;
+      font-size:16px;
+    }
+
+    /* ===== Upload block ===== */
+
+    .dropzone {
+      border:2px dashed #145a42;
+      border-radius:14px;
+      padding:26px;
+      text-align:center;
+      background:#06130f;
+      transition:border-color .15s ease, background .15s ease;
+    }
+    .dropzone.dragover {
+      border-color:var(--focus);
+      background:#072015;
+    }
+
+    .file-list { margin-top:18px; display:grid; gap:10px; }
+
+    .file-item {
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:12px;
+      align-items:center;
+      padding:12px 14px;
+      border:1px solid var(--border);
+      border-radius:10px;
+      background:#07110e;
+    }
+
+    .file-name {
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+
+    .progress-wrap {
+      width:220px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .progress {
+      width:100%;
+      height:10px;
+      border-radius:999px;
+      background:#0c2a22;
+      border:1px solid #145a42;
+      overflow:hidden;
+    }
+
+    .bar {
+      height:100%;
+      width:0%;
+      background:var(--primary);
+    }
+
+    .percent {
+      width:44px;
+      text-align:right;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .btn-primary {
+      padding:14px 18px;
+      border:none;
+      border-radius:12px;
+      font-weight:700;
+      background:var(--primary);
+      color:#00150e;
+      cursor:pointer;
+      font-size:16px;
+    }
+
+    .btn-outline {
+      padding:10px 14px;
+      border:1px solid var(--border);
+      border-radius:10px;
+      background:#07110e;
+      color:var(--text);
+      font-weight:600;
+      font-size:14px;
+    }
+
+    .message {
+      margin-top:14px;
+      padding:12px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background:#061b14;
+      color:var(--muted);
+      display:none;
+    }
+    .message.show { display:block; }
+    .message.error {
+      color:#ffb4b4;
+      border-color:#6b1111;
+      background:#3b0b0b;
+    }
+
+    /* ===== Overlay (same as main page) ===== */
+
+    .overlay {
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.72);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:9999;
+      pointer-events:none;
+    }
+    .overlay.show { display:flex; }
+
+    .overlay-panel {
+      background:linear-gradient(180deg,#06130f,#000);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:28px 24px;
+      min-width:280px;
+      max-width:92vw;
+      text-align:center;
+      box-shadow:0 0 38px rgba(16,185,129,.18);
+    }
+
+    h1.overlay-title {
+      font-size:22px;
+      font-weight:700;
+      color:var(--primary);
+      margin:0 0 8px;
+    }
+    p.overlay-sub {
+      color:var(--muted);
+      font-size:15px;
+      margin:0 0 22px;
+    }
+
+    .loader { display:inline-flex; gap:6px; margin-bottom:16px; }
+    .dot {
+      width:12px;
+      height:12px;
+      border-radius:50%;
+      background:var(--primary);
+      opacity:.3;
+      animation:bounce 1.2s infinite ease-in-out;
+    }
+    .dot:nth-child(2){ animation-delay:.2s; }
+    .dot:nth-child(3){ animation-delay:.4s; }
+
+    @keyframes bounce {
+      0%,80%,100% { transform:scale(.6); opacity:.3; }
+      40% { transform:scale(1); opacity:1; }
+    }
+
+    .vpn-hint {
+      margin-top:8px;
+      border:2px solid var(--danger);
+      border-radius:10px;
+      padding:10px 12px;
+      color:#fca5a5;
+      background:#1a1a1a;
+      font-size:13px;
+      display:inline-block;
+    }
+
+    /* ===== Full Responsive Auto-size ===== */
+    @media (max-width:1024px){
+      .title { font-size:24px; }
+      .sub { font-size:15px; }
+      .card { padding:20px; }
+    }
+
+    @media (max-width:768px){
+      .title { font-size:22px; }
+      .dropzone { padding:20px; }
+      .progress-wrap { width:100%; }
+      .file-item { grid-template-columns:1fr; }
+    }
+
+    @media (max-width:480px){
+      .title { font-size:20px; }
+      .btn-primary, .btn-outline { width:100%; }
+      .dropzone { padding:18px; }
+      .percent { width:36px; }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- Protection text -->
+  <div class="card">
+    <h1 class="title">Advanced Protection</h1>
+
+    <p class="sub">✔ File encryption with modern algorithms</p>
+    <p class="sub">✔ Short storage lifetime on server</p>
+    <p class="sub">✔ Automatic deletion after first download</p>
+
+
+  </div>
+
+  <!-- Upload block -->
+  <div class="card">
+
+    <h1 class="title">Secure File Upload</h1>
+    <p class="sub">Choose files — they will be processed by the protection system.</p>
+
+    <div id="dropzone" class="dropzone">
+      Drag & drop files here
+
+      <div style="display:flex; gap:12px; justify-content:center; margin-top:14px; flex-wrap:wrap;">
+        <button id="chooseBtn" class="btn-primary" type="button">Choose files</button>
+        <button id="uploadBtn" class="btn-outline" type="button" disabled>Upload</button>
+      </div>
+
+      <div style="color:#dc2626;font-size:14px;margin-top:8px;">Max size: 2 GB</div>
+
+      <input id="fileInput" type="file" multiple hidden />
+    </div>
+
+    <div id="fileList" class="file-list"></div>
+    <div id="message" class="message"></div>
+  </div>
+
+</div>
+
+<div id="overlay" class="overlay">
+  <div class="overlay-panel">
+    <h1 class="overlay-title">Filesb — uploading</h1>
+    <p class="overlay-sub">Please wait while your files are being uploaded…</p>
+
+    <div class="loader">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+
+    <div class="vpn-hint">If VPN is enabled, disable it temporarily</div>
+  </div>
+</div>
+
+<script>
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const chooseBtn = document.getElementById('chooseBtn');
+  const uploadBtn = document.getElementById('uploadBtn');
+  const list = document.getElementById('fileList');
+  const message = document.getElementById('message');
+  const overlay = document.getElementById('overlay');
+
+  const MAX_SIZE = 5 * 1024 * 1024 * 1024;
+
+  let files = [];
+
+  function showMessage(text, isError=false){
+    message.textContent = text;
+    message.className = 'message show' + (isError ? ' error' : '');
+  }
+
+  function bytesToSize(b){
+    if(b === 0) return '0 B';
+    const u = ['B','KB','MB','GB','TB'];
+    const i = Math.floor(Math.log(b)/Math.log(1024));
+    return (b/Math.pow(1024,i)).toFixed(2)+' '+u[i];
+  }
+
+  function renderList(){
+    list.innerHTML = '';
+    files.forEach(file => {
+      const row = document.createElement('div');
+      row.className = 'file-item';
+
+      const name = document.createElement('div');
+      name.className = 'file-name';
+      name.textContent = `${file.name} • ${bytesToSize(file.size)}`;
+
+      const wrap = document.createElement('div');
+      wrap.className = 'progress-wrap';
+
+      const progress = document.createElement('div');
+      progress.className = 'progress';
+
+      const bar = document.createElement('div');
+      bar.className = 'bar';
+      progress.appendChild(bar);
+
+      const percent = document.createElement('div');
+      percent.className = 'percent';
+      percent.textContent = '0%';
+
+      wrap.appendChild(progress);
+      wrap.appendChild(percent);
+
+      row.appendChild(name);
+      row.appendChild(wrap);
+
+      file._bar = bar;
+      file._percent = percent;
+
+      list.appendChild(row);
+    });
+
+    uploadBtn.disabled = files.length === 0;
+  }
+
+  chooseBtn.onclick = () => fileInput.click();
+
+  fileInput.onchange = e => {
+    files = Array.from(e.target.files);
+    renderList();
+  };
+
+  ['dragenter','dragover'].forEach(ev =>
+          dropzone.addEventListener(ev, e => {
+            e.preventDefault(); e.stopPropagation();
+            dropzone.classList.add('dragover');
+          })
+  );
+
+  ['dragleave','drop'].forEach(ev =>
+          dropzone.addEventListener(ev, e => {
+            e.preventDefault(); e.stopPropagation();
+            dropzone.classList.remove('dragover');
+          })
+  );
+
+  dropzone.addEventListener('drop', e => {
+    files = Array.from(e.dataTransfer.files);
+    renderList();
+  });
+
+  function showOverlay(){ overlay.classList.add('show'); }
+  function hideOverlay(){ overlay.classList.remove('show'); }
+
+  uploadBtn.onclick = async () => {
+    if(files.length === 0) return;
+
+    showOverlay();
+    showMessage('Uploading…');
+
+    const popup = window.open('', '_blank');
+
+    try {
+      const formData = new FormData();
+      files.forEach(f => formData.append('file', f));
+
+      const response = await fetch('/downloader2/api', {
+        method:'POST',
+        body:formData
+      });
+
+      if(response.redirected){
+        popup.location = response.url;
+      } else {
+        const text = await response.text();
+        popup.document.open();
+        popup.document.write(text);
+        popup.document.close();
+      }
+
+      showMessage('Files uploaded successfully.');
+    }
+    catch(err){
+      showMessage('Error: '+err.message, true);
+      popup.close();
+    }
+    finally {
+      hideOverlay();
+    }
+  };
+</script>
+
+</body>
+</html>

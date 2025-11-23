@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-func ControlerFileUploader(w http.ResponseWriter, r *http.Request, router *mux.Router) {
+func ControlerFileUploaderEncrypt(w http.ResponseWriter, r *http.Request, router *mux.Router) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "err", http.StatusUnauthorized)
 		slog.Error("Err in Cottroler Uploader")
@@ -22,18 +22,17 @@ func ControlerFileUploader(w http.ResponseWriter, r *http.Request, router *mux.R
 
 	}
 
-	filName, err := Handlers.FileUploader(w, r, SC)
+	filName, err := Handlers.FileUploaderEnc(w, r, SC)
 	if err != nil {
 		return
 	}
 
-	url, err := router.Get("fileName").URL("name", filName)
+	url, err := router.Get("fileName").URL("name", filName, "bool", "true")
 	if err != nil {
 		slog.Error("Error can't treate", err)
 		return
 	}
 
-	slog.Info(url.Path)
 	http.Redirect(w, r, url.Path, http.StatusFound)
 
 }
@@ -51,7 +50,7 @@ func CookiGet(w http.ResponseWriter, r *http.Request) (string, error) {
 		http.Redirect(w, r, "/login", http.StatusFound)
 
 	}
-	SC, ok := session.Values["SW"]
+	SC, ok := session.Values["SC"]
 	if !ok {
 		slog.Error("Err", "EXIST:", ok)
 		return "", errors.New("SC don't set")

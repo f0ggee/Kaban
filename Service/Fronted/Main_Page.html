@@ -1,11 +1,10 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Filesb — File Upload</title>
 
-  <!-- CSP можно оставить, fetch и window.open работают -->
   <meta http-equiv="Content-Security-Policy"
         content="default-src 'self';
                  connect-src 'self';
@@ -26,7 +25,7 @@
       --primary:#10b981; --primary-press:#059669; --focus:#22c55e; --danger:#dc2626;
     }
     *,*::before,*::after{ box-sizing:border-box; }
-    html,body{ height:100%; background:var(--bg); color:var(--text); font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; }
+    html,body{ height:100%; background:var(--bg); color:var(--text); font-family:"Inter",system-ui; }
     a{ color:var(--muted); text-decoration:none; }
     a:hover{ color:var(--text); }
 
@@ -35,20 +34,24 @@
     .header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
     .brand{ font-weight:700; color:var(--primary); font-size:20px; letter-spacing:.4px; }
     .auth{ display:flex; gap:12px; }
+
+    /* ===== BUTTON ANIMATIONS ===== */
+    .btn-outline, .btn-primary{
+      transition:background .15s ease, border-color .15s ease, transform .08s ease;
+    }
+    .btn-primary:hover{ background:var(--primary-press); }
+    .btn-outline:hover{ border-color:var(--focus); }
+    .btn-primary:active, .btn-outline:active{ transform:translateY(1px); }
+
     .btn-outline{
       padding:10px 14px; border:1px solid var(--border); border-radius:10px;
       background:#07110e; color:var(--text); font-weight:600; font-size:14px;
-      transition:border-color .15s ease, background .15s ease;
     }
-    .btn-outline:hover{ border-color:var(--focus); }
+
     .btn-primary{
       padding:14px 18px; border:none; border-radius:12px; font-weight:700;
       background:var(--primary); color:#00150e; cursor:pointer; font-size:16px;
-      transition:background .15s ease, transform .06s ease;
     }
-    .btn-primary:hover{ background:var(--primary-press); }
-    .btn-primary:active{ transform:translateY(1px); }
-    .btn-primary[disabled]{ opacity:.7; cursor:not-allowed; }
 
     .grid{ display:grid; grid-template-columns: 1.1fr 0.9fr; gap:24px; }
     @media (max-width:860px){ .grid{ grid-template-columns:1fr; } }
@@ -67,250 +70,177 @@
       border-radius:14px; padding:26px; text-align:center; background:#06130f;
       transition:border-color .15s ease, background .15s ease;
     }
-    .dropzone.dragover{ border-color:var(--focus); background:#072015; }
-    .drop-actions{ display:flex; gap:12px; justify-content:center; margin-top:14px; flex-wrap:wrap; }
-    .hint{ font-size:13px; color:var(--muted); margin-top:8px; }
-    .limit{
-      margin-top:10px; font-size:14px; color:var(--danger);
-      background:#2b0f0f; border:1px solid #6b1111; padding:10px; border-radius:8px; display:inline-block;
-    }
 
     .file-list{ margin-top:18px; display:grid; gap:10px; }
-    .file-item{
-      display:grid; grid-template-columns:1fr auto; gap:12px; align-items:center;
-      padding:12px 14px; border:1px solid var(--border); border-radius:10px; background:#07110e;
-    }
-    .file-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .progress-wrap{ width:220px; display:flex; align-items:center; gap:8px; }
-    .progress{
-      width:100%; height:10px; border-radius:999px; background:#0c2a22; overflow:hidden;
-      border:1px solid #145a42;
-    }
-    .bar{ height:100%; width:0%; background:var(--primary); }
-    .percent{ width:44px; text-align:right; font-size:12px; color:var(--muted); }
 
-    .message{
-      margin-top:14px; padding:12px; border-radius:10px;
-      border:1px solid var(--border); background:#061b14; color:var(--muted); display:none;
-    }
-    .message.show{ display:block; }
-    .message.error{ color:#ffb4b4; border-color:#6b1111; background:#3b0b0b; }
-
-    .side .list{ margin:10px 0 0; padding-left:18px; color:var(--muted); }
-    .side .list li{ margin:6px 0; }
-    .footer{ margin-top:28px; text-align:center; font-size:12px; color:var(--muted); opacity:.8; }
-
-    /* ===== Loading overlay (как у твоей страницы uploading). Не блокирует pointer events. ===== */
     .overlay{ position:fixed; inset:0; background:rgba(0,0,0,.72); display:none; align-items:center; justify-content:center; z-index:9999; pointer-events:none; }
     .overlay.show{ display:flex; }
-    .overlay-panel{
-      background:linear-gradient(180deg,#06130f,#000); border:1px solid var(--border);
-      border-radius:16px; padding:28px 24px; min-width:280px; max-width:92vw; text-align:center;
-      box-shadow:0 0 38px rgba(16,185,129,.18);
+
+    @media (max-width:1024px){
+      .container{ padding:20px 12px; }
+      .title{ font-size:22px; }
     }
-    h1.overlay-title{font-size:22px;font-weight:700;color:var(--primary);margin:0 0 8px;}
-    p.overlay-sub{color:var(--muted);font-size:15px;margin:0 0 22px;}
-    .loader{display:inline-flex;gap:6px;margin-bottom:16px;}
-    .dot{ width:12px; height:12px; border-radius:50%; background:var(--primary); opacity:.3; animation:bounce 1.2s infinite ease-in-out; }
-    .dot:nth-child(2){animation-delay:.2s;} .dot:nth-child(3){animation-delay:.4s;}
-    @keyframes bounce{ 0%,80%,100%{transform:scale(.6);opacity:.3;} 40%{transform:scale(1);opacity:1;} }
-    .vpn-hint{ margin-top:8px; border:2px solid var(--danger); border-radius:10px; padding:10px 12px; color:#fca5a5; background:#1a1a1a; font-size:13px; display:inline-block; }
+    @media (max-width:768px){
+      .header{ flex-direction:column; gap:12px; }
+      .grid{ grid-template-columns:1fr; }
+    }
+    @media (max-width:480px){
+      .title{ font-size:20px; }
+      .btn-primary, .btn-outline{ width:100%; }
+      .dropzone{ padding:20px; }
+    }
+
   </style>
 </head>
+
 <body>
-<div class="container" aria-busy="false">
-  <header class="header" aria-label="Site header">
+<div class="container">
+
+  <header class="header">
     <div class="brand">Filesb</div>
-    <nav class="auth" aria-label="Navigation">
+    <nav class="auth">
       <a class="btn-outline" href="/profile">Profile</a>
     </nav>
   </header>
 
   <main class="grid">
-    <section class="card" aria-labelledby="up-title">
-      <h1 id="up-title" class="title">Загрузка файлов</h1>
-      <p class="sub">Выберите файлы и получите ссылку для шаринга</p>
 
-      <div id="dropzone" class="dropzone" tabindex="0" aria-label="Область для перетаскивания файлов">
-        Перетащите файлы сюда
-        <div class="drop-actions">
-          <button id="chooseBtn" class="btn-primary" type="button">Выбрать файлы</button>
-          <button id="uploadBtn" class="btn-outline" type="button" disabled>Загрузить</button>
+    <section class="card">
+      <h1 class="title">File Upload</h1>
+      <p class="sub">Choose files and get an instant share link</p>
+
+      <div id="dropzone" class="dropzone">
+        Drag & Drop files here
+        <div style="margin-top:12px;">
+          <button id="chooseBtn" class="btn-primary" type="button">Choose files</button>
+          <button id="uploadBtn" class="btn-outline" type="button" disabled>Upload</button>
         </div>
-        <div class="hint">Можно выбрать несколько файлов</div>
-        <div class="limit">Максимальный размер файла: 2 GB</div>
+        <div class="sub" style="font-size:13px;">Multiple selection supported</div>
+        <div style="color:#dc2626;font-size:14px;">Max file size: 2 GB</div>
         <input id="fileInput" type="file" multiple hidden />
       </div>
 
-      <div id="fileList" class="file-list" aria-live="polite"></div>
-      <div id="message" class="message" role="status"></div>
+      <div id="fileList" class="file-list"></div>
+      <div id="message" class="message"></div>
     </section>
 
-    <aside class="card side" aria-labelledby="info-title">
-      <h2 id="info-title" class="title">Почему Filesb</h2>
-      <ul class="list">
-        <li>Без мессенджеров</li>
-        <li>Минималистичный интерфейс</li>
-        <li>Мгновенные ссылки на файлы</li>
-        <li>Тёмная тема с зелёными акцентами</li>
+    <aside class="card">
+      <h2 class="title">Why Filesb</h2>
+      <ul class="sub" style="margin-left:18px;">
+        <li>No messengers needed</li>
+        <li>Minimalistic interface</li>
+        <li>Instant file links</li>
+        <li>Dark theme with green accents</li>
       </ul>
-      <div class="footer">© 2025 Filesb</div>
+
+      <hr style="border-color:#0f3a2e;margin:18px 0;">
+
+      <h2 class="title">Advanced Protection</h2>
+      <ul class="sub" style="margin-left:18px;">
+        <li>Modern file encryption</li>
+        <li>Short server storage time</li>
+        <li>Auto-delete after first download</li>
+      </ul>
+
+      <a href="/protect" class="btn-primary" style="display:block;text-align:center;margin-top:18px;">
+        Go to protection
+      </a>
+
+      <div style="margin-top:28px;text-align:center;font-size:12px;opacity:.7;">
+        © 2025 Filesb
+      </div>
     </aside>
+
   </main>
 </div>
 
-<!-- Overlay-плашка -->
-<div id="overlay" class="overlay" role="status" aria-live="assertive" aria-atomic="true">
-  <div class="overlay-panel">
-    <h1 class="overlay-title">Filesb — uploading</h1>
-    <p class="overlay-sub">Пожалуйста, подождите. Файлы отправляются…</p>
-    <div class="loader" aria-hidden="true">
-      <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-    </div>
-    <div class="vpn-hint">Если у вас включён VPN, временно отключите его для корректной работы.</div>
+<div id="overlay" class="overlay">
+  <div class="card">
+    <h1 class="title">Filesb — uploading</h1>
+    <p class="sub">Please wait…</p>
   </div>
 </div>
 
 <script>
   const dropzone = document.getElementById('dropzone');
-  const fileInput = document.getElementById('fileInput');
   const chooseBtn = document.getElementById('chooseBtn');
   const uploadBtn = document.getElementById('uploadBtn');
+  const fileInput = document.getElementById('fileInput');
   const list = document.getElementById('fileList');
   const message = document.getElementById('message');
   const overlay = document.getElementById('overlay');
 
-  const MAX_SIZE = 5 * 1024 * 1024 * 1024; // 5 GB (UI пишет 2 GB)
+  const MAX_SIZE = 5 * 1024 * 1024 * 1024;
 
   let files = [];
 
-  function showMessage(text, isError=false){
+  function showMessage(text){
     message.textContent = text;
-    message.className = 'message show' + (isError ? ' error' : '');
-  }
-
-  function bytesToSize(b){
-    if(b === 0) return '0 B';
-    const u = ['B','KB','MB','GB','TB'];
-    const i = Math.floor(Math.log(b)/Math.log(1024));
-    return (b/Math.pow(1024,i)).toFixed(2)+' '+u[i];
+    message.style.display = 'block';
   }
 
   function renderList(){
     list.innerHTML = '';
-    files.forEach(file => {
+    files.forEach(f => {
       const row = document.createElement('div');
-      row.className = 'file-item';
-
-      const name = document.createElement('div');
-      name.className = 'file-name';
-      name.textContent = `${file.name} • ${bytesToSize(file.size)}`;
-
-      const wrap = document.createElement('div');
-      wrap.className = 'progress-wrap';
-
-      const progress = document.createElement('div');
-      progress.className = 'progress';
-      const bar = document.createElement('div');
-      bar.className = 'bar';
-      progress.appendChild(bar);
-
-      const percent = document.createElement('div');
-      percent.className = 'percent';
-      percent.textContent = '0%';
-
-      wrap.appendChild(progress);
-      wrap.appendChild(percent);
-
-      row.appendChild(name);
-      row.appendChild(wrap);
+      row.style.padding='10px';
+      row.style.border='1px solid var(--border)';
+      row.style.borderRadius='10px';
+      row.textContent = f.name;
       list.appendChild(row);
-
-      file._bar = bar;
-      file._percent = percent;
     });
-
     uploadBtn.disabled = files.length === 0;
   }
 
-  function syncFileInputFromFiles(arrFiles){
-    const dt = new DataTransfer();
-    for(const f of arrFiles) dt.items.add(f);
-    fileInput.files = dt.files;
-  }
-
-  function addFiles(fileList){
-    const valid = [];
-    for(const f of fileList){
-      if(f.size > MAX_SIZE){
-        showMessage(`Файл ${f.name} превышает лимит 5 ГБ`, true);
-        continue;
-      }
-      valid.push(f);
-    }
-    files = valid;
-    syncFileInputFromFiles(files);
+  chooseBtn.onclick = ()=> fileInput.click();
+  fileInput.onchange = e=>{
+    files = [...e.target.files];
     renderList();
-  }
+  };
 
-  chooseBtn.addEventListener('click', () => fileInput.click());
-  fileInput.addEventListener('change', (e) => addFiles(e.target.files));
+  uploadBtn.onclick = async ()=>{
+    if(files.length===0) return;
 
-  ['dragenter','dragover'].forEach(ev =>
-          dropzone.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); dropzone.classList.add('dragover'); })
-  );
-  ['dragleave','drop'].forEach(ev =>
-          dropzone.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); dropzone.classList.remove('dragover'); })
-  );
-  dropzone.addEventListener('drop', e => addFiles(e.dataTransfer.files));
+    overlay.classList.add('show');
 
-  function showLoadingOverlay(){ overlay.classList.add('show'); }
-  function hideLoadingOverlay(){ overlay.classList.remove('show'); }
+    const fd = new FormData();
+    files.forEach(f=>fd.append('file',f));
 
-  // Фоновая отправка через fetch + «пустая» вкладка, открытая синхронно в клике — чтобы редиректы не блокировались
-  uploadBtn.addEventListener('click', async () => {
-    if (files.length === 0) return;
-
-    showLoadingOverlay();
-    showMessage('Идёт загрузка…');
-
-    // Открываем пустую вкладку синхронно — браузер не заблокирует
     const popup = window.open('', '_blank');
 
-    try {
-      const formData = new FormData();
-      for (const f of files) formData.append('file', f);
-
-      const response = await fetch('/downloader/api', {
-        method: 'POST',
-        body: formData
-        // credentials: 'include', // раскомментируйте, если серверу нужны куки
-      });
-
-      if (response.redirected) {
-        // Сервер вернул 3xx — переводим ранее открытую вкладку на конечный URL
-        if (popup) popup.location = response.url;
-        showMessage('Файлы отправлены. Проверьте новую вкладку.');
-      } else if (response.ok) {
-        // Нет редиректа — покажем ответ как текст
-        const text = await response.text();
-        if (popup && !popup.closed) {
-          popup.document.open();
-          popup.document.write(text);
-          popup.document.close();
-        }
-        showMessage('Файлы успешно загружены.');
+    try{
+      const res = await fetch('/downloader/api',{method:'POST',body:fd});
+      if(res.redirected){
+        popup.location = res.url;
       } else {
-        if (popup && !popup.closed) popup.close();
-        showMessage('Ошибка при загрузке: ' + (response.statusText || response.status), true);
+        popup.document.write(await res.text());
       }
-    } catch (err) {
-      if (popup && !popup.closed) popup.close();
-      showMessage('Ошибка: ' + (err.message || err), true);
+      showMessage("Files uploaded");
+    } catch(err){
+      showMessage("Error: "+err.message);
+      popup.close();
     } finally {
-      hideLoadingOverlay();
+      overlay.classList.remove('show');
     }
+  };
+
+  ['dragenter','dragover'].forEach(ev=>
+          dropzone.addEventListener(ev,e=>{
+            e.preventDefault(); dropzone.style.borderColor="#22c55e";
+          })
+  );
+  ['dragleave','drop'].forEach(ev=>
+          dropzone.addEventListener(ev,e=>{
+            e.preventDefault(); dropzone.style.borderColor="#145a42";
+          })
+  );
+
+  dropzone.addEventListener('drop', e=>{
+    files = [...e.dataTransfer.files];
+    renderList();
   });
+
 </script>
+
 </body>
 </html>
