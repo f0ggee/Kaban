@@ -1,24 +1,23 @@
 package InftarctionLevel
 
 import (
+	"MasterServer_/Dto"
 	"MasterServer_/InftarctionLevel/keyInteration"
 	"encoding/hex"
 	"errors"
 	"log/slog"
 	"os"
 
+	"MasterServer_/InftarctionLevel/RedisUse"
 	"github.com/awnumar/memguard"
 )
-
-func init() {
-
-}
 
 type ProcessContoller struct{}
 
 func (p ProcessContoller) ProsessAndSendData(KeyOfServer []byte, RsaKeyNew []byte, NameServer string) error {
 
 	keysInteraction := *keyInteration.Connection()
+	redisConnect := *RedisUse.ConnectionRedis()
 	AesKey := memguard.NewBufferFromBytes(keysInteraction.Tokens.AesKey())
 	if AesKey == nil {
 		return errors.New("AesKey is nil")
@@ -50,5 +49,17 @@ func (p ProcessContoller) ProsessAndSendData(KeyOfServer []byte, RsaKeyNew []byt
 		return err
 	}
 
-	slog.Info("Generated master server signature", "Signature", Sign)
+	RedisDat := &Dto.RedisDataLooksLike{
+		AesKey:    EncryptedAesKey,
+		PlainText: EncryptedRsaKey,
+		Signature: Sign,
+	}
+
+	err = redisConnect.Client.SendData(RedisDat, NameServer)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
 }

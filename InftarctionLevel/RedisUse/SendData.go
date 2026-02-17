@@ -1,7 +1,22 @@
 package RedisUse
 
-type RedisUse struct{}
+import (
+	"MasterServer_/Dto"
+	"context"
+	"log/slog"
+)
 
-func (r RedisUse) SendData(PlainText []byte, AesKey []byte, sign []byte, serverName string) error {
+type RedisUseStruct struct{}
 
+func (*RedisUseStruct) SendData(data *Dto.RedisDataLooksLike, serverName string) error {
+
+	connect := RedisConnect()
+	defer connect.Close()
+
+	err := connect.HSet(context.Background(), serverName, data).Err()
+	if err != nil {
+		slog.Error("RedisUseStruct.SendData()", "Error", err)
+		return err
+	}
+	return nil
 }

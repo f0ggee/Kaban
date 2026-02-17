@@ -1,5 +1,7 @@
 package DomainLevel
 
+import "MasterServer_/Dto"
+
 type RedisUse interface {
-	SendData([]byte, []byte, []byte, string) error
+	SendData(*Dto.RedisDataLooksLike, string) error
 }
