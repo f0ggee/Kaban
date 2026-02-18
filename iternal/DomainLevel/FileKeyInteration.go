@@ -1,7 +1,11 @@
 package DomainLevel
 
 type FileInfo interface {
-	SaveFileInfo(string, string)
+	ConvertToBytesFileInfo(string, []byte) ([]byte, error)
 	GetRealNameFile(string) string
 	ProcessingFileParameters(string) (string, error)
+	GenerateShortFileName() string
+	EncryptData([]byte, []byte) ([]byte, error)
+	DecryptFileInfo([]byte, []byte, []byte) ([]byte, string, error)
+	FindFormatOfFile(string) string
 }

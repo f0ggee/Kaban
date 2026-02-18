@@ -1,9 +1,10 @@
 package Handlers
 
 import (
+	"Kaban/iternal/InfrastructureLayer"
 	Uttiltesss2 "Kaban/iternal/Service/Helpers"
-	"Kaban/iternal/Service/Helpers/validator"
 	"context"
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"mime/multipart"
@@ -18,10 +19,17 @@ import (
 func FileUploaderNoEncrypt(r *http.Request) (string, error) {
 	slog.Info("Func FileUploaderNoEncrypt starts")
 
+	apps := *InfrastructureLayer.ConnectKeyControl()
+
 	file, sizeAndName, err := r.FormFile("file")
 	if err != nil {
-		slog.Error("Err from FileUploader 1 ", err)
+		slog.Error("Err from FileUploader 1 ", err.Error())
 		return "", err
+	}
+	if sizeAndName.Size >= FileMaxSize {
+		slog.Info("File too big")
+
+		return "", errors.New("file too big")
 	}
 	defer func() {
 		err = file.Close()
@@ -30,21 +38,13 @@ func FileUploaderNoEncrypt(r *http.Request) (string, error) {
 			return
 		}
 	}()
-
-	err = validator.CheckFileSize2(sizeAndName.Size)
-	if err != nil {
-		slog.Error("Error in file Uploader no encrypt", "Error", err)
-		return "", err
-	}
-
 	ctx, cancel := Uttiltesss2.Context2(r.Context())
 	if cancel == nil {
 		return "", errors.New("error in file Uploader no encrypt")
 	}
 	defer cancel()
 
-	//This function cheks a len of name file
-	nameFile := CheckLenOfName(sizeAndName.Filename)
+	shortNameFile := apps.Key.GenerateShortFileName()
 
 	_, goroutines := Uttiltesss2.FindBest(sizeAndName.Size)
 
@@ -57,7 +57,7 @@ func FileUploaderNoEncrypt(r *http.Request) (string, error) {
 
 	cfg, err := Uttiltesss2.S3Helper()
 	if err != nil {
-		slog.Error("Err cant", err)
+		slog.Error("Err cant", err.Error())
 		return "", err
 	}
 
@@ -66,9 +66,21 @@ func FileUploaderNoEncrypt(r *http.Request) (string, error) {
 		return s, err2
 	}
 
+	fileIntoBytes, err := json.Marshal(sizeAndName.Filename)
+	if err != nil {
+		slog.Error("Err in FileUploader no encrypt", "Error", err)
+		return "", err
+	}
+	redisConnect := *InfrastructureLayer.NewSetRedisConnect()
+
+	err = redisConnect.Ras.WriteData(shortNameFile, fileIntoBytes)
+	if err != nil {
+		return "", err
+	}
+
 	slog.Info("File success upload")
 
-	return nameFile, nil
+	return shortNameFile, nil
 
 }
 
@@ -79,10 +91,17 @@ func uploadFile(cfg *s3.Client, goroutines int, err error, ctx context.Context, 
 		uploader.Concurrency = goroutines
 	})
 
+	apps := *InfrastructureLayer.ConnectKeyControl()
+
+	FileExtension := apps.Key.FindFormatOfFile(sizeAndName.Filename)
+
+	slog.Info("File extension", FileExtension)
 	_, err = uploader.Upload(ctx, &s3.PutObjectInput{
-		Bucket: aws.String(Bucket),
-		Key:    aws.String(sizeAndName.Filename),
-		Body:   file,
+		Bucket:      aws.String(Bucket),
+		Key:         aws.String(sizeAndName.Filename),
+		ContentType: aws.String(FileExtension),
+
+		Body: file,
 	})
 
 	switch {

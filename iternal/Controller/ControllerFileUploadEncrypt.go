@@ -54,13 +54,14 @@ func FileUploaderEncrypt(w http.ResponseWriter, r *http.Request, router *mux.Rou
 
 	filName, err := Handlers.FileUploaderEncrypt(w, r)
 	if err != nil {
+		fmt.Println(err)
+
 		w.Header().Set("Content-Type", JsonExample)
 		w.WriteHeader(400)
 		err = json.NewEncoder(w).Encode(Answer{
 			StatusOperation: "NotStart",
 			Error:           fmt.Sprint(err),
-
-			UrlToRedict: "nil",
+			UrlToRedict:     "",
 		})
 		if err != nil {
 			slog.Info("Error in controller ", err)

@@ -21,7 +21,7 @@ func RegisterService(de *Dto.HandlerRegister) (string, string, error) {
 	err := app.Re.CheckUser(de.Email)
 	switch {
 	case errors.Is(err, errors.New("person already exist")):
-		return "", "", err
+		return "", "", errors.New("person already exist")
 
 	case err != nil:
 		return "", "", err
@@ -37,7 +37,6 @@ func RegisterService(de *Dto.HandlerRegister) (string, string, error) {
 		return "", "", err
 	}
 
-	//Интерфейс для создания пользователя, возвращает уникальный индификатор пользователя
 	UnicIdUser, err := app.Re.CreateUser(de.Name, de.Email, HashPassword, ScryptKey)
 	if err != nil {
 		return "", "", err
@@ -64,7 +63,7 @@ func GenerateScrypt(de *Dto.HandlerRegister, err error) (string, error) {
 	}
 	D3, err := scrypt.Key([]byte(de.Password), salt, 1<<15, 8, 1, 32)
 	if err != nil {
-		slog.Error("Error cant create password", err)
+		slog.Error("Error cant create password", err.Error())
 		return "", err
 	}
 	D4 := hex.EncodeToString(D3)

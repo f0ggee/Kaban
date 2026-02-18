@@ -1,14 +1,17 @@
 package Handlers
 
 import (
-	"Kaban/iternal/Dto"
+	"Kaban/iternal/InfrastructureLayer"
 	Uttiltesss2 "Kaban/iternal/Service/Helpers"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"log/slog"
+	"mime"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -22,9 +25,19 @@ func DownloadWithNonEncrypt(w http.ResponseWriter, name string, IncomeContext co
 	ctx, cancel := Uttiltesss2.ContextForDownloading(IncomeContext)
 	defer cancel()
 
-	nameOfFile := GetsName(name)
+	redisConnect := *InfrastructureLayer.NewSetRedisConnect()
 
-	//Create connect to S3
+	fileNameInBytes, err := redisConnect.Ras.GetFileInfo(name)
+	if err != nil {
+		return err, ""
+	}
+
+	trueFileName := ""
+	err = json.Unmarshal(fileNameInBytes, &trueFileName)
+	if err != nil {
+		slog.Error("Unmarshal err", err.Error())
+		return err, ""
+	}
 	sees, err := Uttiltesss2.Inzelire()
 	if err != nil {
 		slog.Error("Error in create s3 server", "err:", err)
@@ -37,7 +50,8 @@ func DownloadWithNonEncrypt(w http.ResponseWriter, name string, IncomeContext co
 	o, err := downloader.GetObjectWithContext(ctx, &s3.GetObjectInput{
 		Bucket:      aws.String(Bucket),
 		IfNoneMatch: aws.String(""),
-		Key:         &nameOfFile,
+
+		Key: &trueFileName,
 	})
 
 	switch {
@@ -50,6 +64,9 @@ func DownloadWithNonEncrypt(w http.ResponseWriter, name string, IncomeContext co
 
 	}
 
+	fileExtension := filepath.Ext(trueFileName)
+	FileExtension := mime.TypeByExtension(fileExtension)
+
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
@@ -58,8 +75,8 @@ func DownloadWithNonEncrypt(w http.ResponseWriter, name string, IncomeContext co
 		}
 	}(o.Body)
 
-	w.Header().Set("Content-Type", "application/octet-stream")
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename= %v", nameOfFile))
+	w.Header().Set("Content-Type", FileExtension)
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename= %v", trueFileName))
 	w.Header().Set("Content-Length", strconv.FormatInt(*o.ContentLength, 10))
 
 	if _, err = io.Copy(w, o.Body); err != nil {
@@ -68,23 +85,15 @@ func DownloadWithNonEncrypt(w http.ResponseWriter, name string, IncomeContext co
 
 	}
 
-	slog.Info("Func DownloadWithNonEncrypt ends")
+	slog.Info("start delete func in download  ")
 
-	slog.Error("start ")
-	DeleteFile(nameOfFile, false)
+	S3Interaction := *InfrastructureLayer.NewConnectToS3()
+
+	err = S3Interaction.Manage.DeleteFileFromS3(trueFileName, Bucket)
+	if err != nil {
+		return err, ""
+	}
+	slog.Info("ends delete func in download  ")
 
 	return nil, ""
-}
-
-// GetsName gets the real name from the map
-func GetsName(name string) string {
-
-	Mut.RLock()
-	names := ""
-	if Name, ok := Dto.NamesToConvert[name]; ok {
-		names = Name
-	}
-	Mut.RUnlock()
-	slog.Info("name", names)
-	return names
 }
