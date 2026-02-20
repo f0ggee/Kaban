@@ -15,10 +15,11 @@ type ProcessController struct {
 	KeyInteracting   DomainLevel.KeyInteracting
 	RedisInteracting DomainLevel.RedisUse
 	Process          DomainLevel.Process
+	ServerManagement DomainLevel.ServerDataManagement
 }
 
-func ConnectProcessController(redisInteracting DomainLevel.RedisUse, Key DomainLevel.KeyInteracting, Process DomainLevel.Process) *ProcessController {
-	return &ProcessController{KeyInteracting: Key, RedisInteracting: redisInteracting, Process: Process}
+func NewProcessController(keyInteracting DomainLevel.KeyInteracting, redisInteracting DomainLevel.RedisUse, process DomainLevel.Process, serverManagement DomainLevel.ServerDataManagement) *ProcessController {
+	return &ProcessController{KeyInteracting: keyInteracting, RedisInteracting: redisInteracting, Process: process, ServerManagement: serverManagement}
 }
 
 func (p ProcessController) HandlingAndSendData(KeyOfServer []byte, RsaKeyNew []byte, NameServer string) error {
