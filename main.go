@@ -1,8 +1,13 @@
 package main
 
 import (
+	"MasterServer_/InfrastructureLevel"
+	"MasterServer_/InfrastructureLevel/GlobalProces"
+	"MasterServer_/InfrastructureLevel/RedisUse"
+	"MasterServer_/InfrastructureLevel/keyInteration"
 	"log/slog"
 
+	"MasterServer_/InfrastructureLevel/serverManagment"
 	"github.com/awnumar/memguard"
 	"github.com/joho/godotenv"
 )
@@ -28,5 +33,13 @@ func init() {
 func main() {
 	memguard.CatchInterrupt()
 	defer memguard.Purge()
+	key := keyInteration.KeyInterationController{}
+	RedisInteracting := RedisUse.RedisUseStruct{}
+	//ServerManaging := serverManagment.ServerManagement{}
+	globalProcess := GlobalProces.ProcessController{}
+	//connect := InftarctionLevel.NewCollectPacks(&key, &RedisInteracting, ServerManaging, globalProcess)
+	s := GlobalProces.ConnectProcessController(&RedisInteracting, &key, globalProcess)
+
+	err := s.Process.HandlingAndSendData()
 
 }

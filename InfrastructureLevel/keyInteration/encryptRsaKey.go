@@ -6,16 +6,16 @@ import (
 	"log/slog"
 )
 
-func (d *KeyInterationController) EncryptRsaKey(AesKey []byte, RsaKey []byte) ([]byte, error) {
+func (*KeyInterationController) EncryptRsaKey(AesKey []byte, RsaKey []byte) ([]byte, error) {
 
-	aesNewBlocke, err := aes.NewCipher(AesKey)
+	aesNewBlock, err := aes.NewCipher(AesKey)
 	if err != nil {
 		slog.Error("error creating new aes cipher", "Error", err.Error())
 		return nil, err
 
 	}
 
-	gcm, err := cipher.NewGCM(aesNewBlocke)
+	gcm, err := cipher.NewGCM(aesNewBlock)
 	if err != nil {
 		slog.Error("error creating new gcm", "Error", err.Error())
 		return nil, err

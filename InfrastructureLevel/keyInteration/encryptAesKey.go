@@ -9,13 +9,13 @@ import (
 
 func (*KeyInterationController) EncryptAesKey(AesKey []byte, RsaKey []byte) ([]byte, error) {
 
-	RsaKeyInPublick, err := x509.ParsePKCS1PublicKey(RsaKey)
+	RsaKeyInPublic, err := x509.ParsePKCS1PublicKey(RsaKey)
 	if err != nil {
 		slog.Error("Error Parsing RsaKey", "Error", err.Error())
 		return nil, err
 	}
 
-	encryptedText, err := rsa.EncryptPKCS1v15(rand.Reader, RsaKeyInPublick, AesKey)
+	encryptedText, err := rsa.EncryptPKCS1v15(rand.Reader, RsaKeyInPublic, AesKey)
 	if err != nil {
 		slog.Error("Error Encrypting", "Error", err.Error())
 		return nil, err

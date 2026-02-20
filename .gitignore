@@ -4,4 +4,4 @@
 .env
 
 
-InftarctionLevel/RedisUseStruct/redisConnect.go
+InfrastructureLevel/RedisUseStruct/redisConnect.go
