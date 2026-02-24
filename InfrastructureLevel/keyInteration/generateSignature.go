@@ -8,7 +8,7 @@ import (
 	"log/slog"
 )
 
-func (*KeyInterationController) GenerateSignature(HashFromData []byte, privateKeyServer []byte) ([]byte, error) {
+func (s *KeyInterationController) GenerateSignature(HashFromData []byte, privateKeyServer []byte) ([]byte, error) {
 
 	MasterServerPrivateKey, err := x509.ParsePKCS1PrivateKey(privateKeyServer)
 	if err != nil {

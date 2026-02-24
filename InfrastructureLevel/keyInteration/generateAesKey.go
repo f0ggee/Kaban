@@ -7,6 +7,11 @@ import (
 type KeyInterationController struct {
 }
 
+func (s *KeyInterationController) SayHi() string {
+
+	return "Hi"
+}
+
 func (*KeyInterationController) AesKey() []byte {
 
 	AesKey := make([]byte, 32)

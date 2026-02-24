@@ -6,4 +6,5 @@ type KeyInteracting interface {
 	EncryptAesKey([]byte, []byte) ([]byte, error)
 	GenerateHash([]byte, []byte) []byte
 	GenerateSignature([]byte, []byte) ([]byte, error)
+	SayHi() string
 }

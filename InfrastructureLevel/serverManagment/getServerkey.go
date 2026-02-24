@@ -2,30 +2,48 @@ package serverManagment
 
 import (
 	"MasterServer_/DomainLevel"
+	"encoding/hex"
 	"log"
 	"log/slog"
 	"os"
-	"time"
 )
 
 type Pack2 struct {
 	RsaKey DomainLevel.RsaKeyManipulation
 }
-type ServerManagement struct{}
 
-func (s Pack2) GetServerKey(Num int) []byte {
+type ServerManagement struct {
+	S Pack2
+}
 
-	slog.Time("Start searching for server key", time.Now())
+func (s *ServerManagement) SayHi() string {
+	//TODO implement me
+	return "Hello World!"
+}
+
+func NewServerManagement(s Pack2) *ServerManagement {
+	return &ServerManagement{S: s}
+}
+
+func (s *ServerManagement) GetServerKey(Num int) []byte {
+	slog.Info("start getting the server key", "ServerNumber", Num)
 	switch Num {
 	case 1:
 
-		slog.Info("start getting the server key", "ServerNumber", Num)
+		ea := os.Getenv("server1")
+		slog.Info("E:", "E", ea)
+		//KeyInBytes := s.RsaKey.ConvertRsaKeyToBytes(ea)
+		////if KeyInBytes == nil {
+		////	log.Println("Rsa key does not exist")
+		////	return nil
+		////}
 
-		KeyInBytes := s.RsaKey.ConvertRsaKeyToBytes(os.Getenv("server1"))
-		if KeyInBytes == nil {
-			log.Println("Rsa key does not exist")
+		KeyInBytes, err := hex.DecodeString(ea)
+		if err != nil {
+			log.Println("Error converting rsa key to bytes", "Error", err.Error())
 			return nil
 		}
+		slog.Info("Got server key", "ServerNumber", Num)
 		return KeyInBytes
 
 	}

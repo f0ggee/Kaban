@@ -6,7 +6,7 @@ import (
 	"log/slog"
 )
 
-func (*KeyInterationController) EncryptRsaKey(AesKey []byte, RsaKey []byte) ([]byte, error) {
+func (s *KeyInterationController) EncryptRsaKey(AesKey []byte, RsaKey []byte) ([]byte, error) {
 
 	aesNewBlock, err := aes.NewCipher(AesKey)
 	if err != nil {

@@ -8,13 +8,13 @@ import (
 
 type MemgurdControl struct{}
 
-func (m MemgurdControl) SettingNewKey(NewRsaKey []byte) {
+func (m *MemgurdControl) SettingNewKey(NewRsaKey []byte) {
 
 	Dto.Keys.NewPrivateKey = memguard.NewBuffer(len(NewRsaKey))
 	Dto.Keys.NewPrivateKey.Copy(NewRsaKey)
 }
 
-func (m MemgurdControl) DeleteKeysAndSwap() {
+func (m *MemgurdControl) DeleteKeysAndSwap() {
 
 	Dto.Keys.OldPrivateKey.Destroy()
 

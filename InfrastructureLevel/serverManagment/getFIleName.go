@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func (s Pack2) GetServerName(i int) string {
+func (s *ServerManagement) GetServerName(i int) string {
 
 	slog.Time("Start searching for server name", time.Now())
 

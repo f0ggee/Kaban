@@ -4,26 +4,25 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
-	"encoding/hex"
 	"log"
 )
 
 type RsaKeyManipulation struct{}
 
-func (r RsaKeyManipulation) ConvertRsaKeyToBytes(RsaKeyString string) []byte {
+func (r *RsaKeyManipulation) ConvertRsaKeyToBytes(RsaKeyString string) []byte {
 
 	log.Println("Start converting rsa key to bytes")
 
-	Rsa, err := hex.DecodeString(RsaKeyString)
-	if err != nil {
-		log.Println("Error converting rsa key to bytes", "Error", err.Error())
-		return nil
-	}
+	//Rsa, err := hex.DecodeString(RsaKeyString)
+	//if err != nil {
+	//	log.Println("Error converting rsa key to bytes", "Error", err.Error())
+	//	return nil
+	//}
 
-	return Rsa
+	return nil
 }
 
-func (r RsaKeyManipulation) GenerateRsaKey() []byte {
+func (r *RsaKeyManipulation) GenerateRsaKey() []byte {
 	log.Println("RsaKeyManipulation.GenerateRsaKey()", "Start", true)
 
 	RsaKey, err := rsa.GenerateKey(rand.Reader, 2048)

@@ -2,7 +2,7 @@ package keyInteration
 
 import "crypto/sha256"
 
-func (*KeyInterationController) GenerateHash(EncryptedRsaKey []byte, EncryptedAesKey []byte) []byte {
+func (s *KeyInterationController) GenerateHash(EncryptedRsaKey []byte, EncryptedAesKey []byte) []byte {
 	ShaHash := sha256.New()
 	ShaHash.Write(EncryptedRsaKey)
 	ShaHash.Write(EncryptedAesKey)

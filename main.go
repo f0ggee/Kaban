@@ -3,7 +3,6 @@ package main
 import (
 	"MasterServer_/DipendsInjective"
 	"MasterServer_/Dto"
-	"MasterServer_/InfrastructureLevel"
 	"MasterServer_/InfrastructureLevel/GlobalProces"
 	"MasterServer_/InfrastructureLevel/MemguardManipulation"
 	"MasterServer_/InfrastructureLevel/RedisUse"
@@ -13,10 +12,10 @@ import (
 	"log"
 	"log/slog"
 	"os"
-	"sync"
 	"time"
 
 	"MasterServer_/InfrastructureLevel/serverManagment"
+
 	"github.com/awnumar/memguard"
 	"github.com/joho/godotenv"
 )
@@ -51,26 +50,54 @@ func main() {
 
 	key := keyInteration.KeyInterationController{}
 	RedisInteracting := RedisUse.RedisUseStruct{}
-	ServerManaging := serverManagment.Pack2{}
-	globalProcess := GlobalProces.ProcessController{}
+	//globalProcess := GlobalProces.ProcessController{}
 	memguardManipulation := MemguardManipulation.MemgurdControl{}
 	rsaKeyInteraction := rsaKeyManipulation.RsaKeyManipulation{}
 
-	RsaAndMemoryInteract := DipendsInjective.NewRsaKeyManipulationWithRsaAndMemory(memguardManipulation, rsaKeyInteraction)
+	RsaAndMemoryInteract := DipendsInjective.NewRsaKeyManipulationWithRsaAndMemory(&memguardManipulation, &rsaKeyInteraction)
 
-	//connect := InftarctionLevel.NewCollectPacks(&key, &RedisInteracting, ServerManaging, globalProcess)
-	s := GlobalProces.NewProcessController(&key, &RedisInteracting, globalProcess, ServerManaging)
+	ServerManaging := serverManagment.Pack2{RsaKey: &rsaKeyInteraction}
+	serverMangementPack := serverManagment.NewServerManagement(ServerManaging)
+
+	saz := GlobalProces.ProcessController{
+		KeyInteracting:   &key,
+		RedisInteracting: &RedisInteracting,
+		ServerManagement: serverMangementPack,
+	}
+
+	Sa := GlobalProces.NewAnotherProcessController(saz)
 	SwapRsaKey(*RsaAndMemoryInteract)
 
 	for i := 1; i <= ServersCount; i++ {
-		ServerKey := s.ServerManagement.GetServerKey(i)
+		ServerKey := serverMangementPack.GetServerKey(i)
+		if ServerKey == nil {
+			return
+		}
 
+		ServerName := serverMangementPack.GetServerName(i)
+
+		//ServerName := s.ServerManagement.GetServerName(i)
+		if ServerName == "" {
+			slog.Info("we can't find the server", "ServerNumber", i)
+			continue
+		}
+		slog.Info("we found the server", "ServerNumber", i, "ServerName", ServerName)
+
+		slog.Info("DtoData", "Data", Dto.Keys.NewPrivateKey.String())
+
+		err := Sa.HandlingAndSendData(ServerKey, Dto.Keys.NewPrivateKey.Bytes(), ServerName)
+		if err != nil {
+			return
+		}
 	}
+
+	log.Println("Server has done work", "Bool", true)
+
 }
 
 func SwapRsaKey(RsaKey DipendsInjective.RsaKeyManipulationWithRsaAndMemory) {
 	Dto.Keys.Mu.Lock()
-	log.Println("Swaping starts")
+	slog.Info("Swaping starts")
 
 	TemporallySaving := memguard.NewBufferFromBytes(RsaKey.RsaKey.GenerateRsaKey())
 	defer TemporallySaving.Destroy()
@@ -78,7 +105,7 @@ func SwapRsaKey(RsaKey DipendsInjective.RsaKeyManipulationWithRsaAndMemory) {
 	RsaKey.KeyAndMemory.DeleteKeysAndSwap()
 
 	RsaKey.KeyAndMemory.SettingNewKey(TemporallySaving.Bytes())
-	log.Println("Swaping starts")
+	log.Println("Swaping End")
 
 	Dto.Keys.Mu.Unlock()
 }

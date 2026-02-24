@@ -7,7 +7,7 @@ import (
 	"log/slog"
 )
 
-func (*KeyInterationController) EncryptAesKey(AesKey []byte, RsaKey []byte) ([]byte, error) {
+func (s *KeyInterationController) EncryptAesKey(AesKey []byte, RsaKey []byte) ([]byte, error) {
 
 	RsaKeyInPublic, err := x509.ParsePKCS1PublicKey(RsaKey)
 	if err != nil {

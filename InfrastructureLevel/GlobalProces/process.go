@@ -14,34 +14,44 @@ import (
 type ProcessController struct {
 	KeyInteracting   DomainLevel.KeyInteracting
 	RedisInteracting DomainLevel.RedisUse
-	Process          DomainLevel.Process
 	ServerManagement DomainLevel.ServerDataManagement
+	Process          DomainLevel.Process
 }
 
-func NewProcessController(keyInteracting DomainLevel.KeyInteracting, redisInteracting DomainLevel.RedisUse, process DomainLevel.Process, serverManagement DomainLevel.ServerDataManagement) *ProcessController {
-	return &ProcessController{KeyInteracting: keyInteracting, RedisInteracting: redisInteracting, Process: process, ServerManagement: serverManagement}
+//func NewProcessController(keyInteracting DomainLevel.KeyInteracting, redisInteracting DomainLevel.RedisUse, serverManagement DomainLevel.ServerDataManagement) *ProcessController {
+//	return &ProcessController{KeyInteracting: keyInteracting, RedisInteracting: redisInteracting, ServerManagement: serverManagement}
+//}
+
+type AnotherProcessController struct {
+	E ProcessController
 }
 
-func (p ProcessController) HandlingAndSendData(KeyOfServer []byte, RsaKeyNew []byte, NameServer string) error {
+func NewAnotherProcessController(e ProcessController) *AnotherProcessController {
+	return &AnotherProcessController{E: e}
+}
 
-	AesKey := memguard.NewBufferFromBytes(p.KeyInteracting.AesKey())
+func (psa *AnotherProcessController) HandlingAndSendData(KeyOfServer []byte, RsaKeyNew []byte, NameServer string) error {
+
+	slog.Info("Starting HandlingAndSendData")
+
+	AesKey := memguard.NewBufferFromBytes(psa.E.KeyInteracting.AesKey())
 	if AesKey == nil {
 		return errors.New("AesKey is nil")
 	}
 	defer AesKey.Destroy()
 
-	EncryptedRsaKey, err := p.KeyInteracting.EncryptRsaKey(AesKey.Bytes(), RsaKeyNew)
+	EncryptedRsaKey, err := psa.E.KeyInteracting.EncryptRsaKey(AesKey.Bytes(), RsaKeyNew)
 	if err != nil {
 
 		return err
 	}
 
-	EncryptedAesKey, err := p.KeyInteracting.EncryptAesKey(AesKey.Bytes(), KeyOfServer)
+	EncryptedAesKey, err := psa.E.KeyInteracting.EncryptAesKey(AesKey.Bytes(), KeyOfServer)
 	if err != nil {
 		return err
 	}
 
-	HashSha := p.KeyInteracting.GenerateHash(EncryptedRsaKey, EncryptedAesKey)
+	HashSha := psa.E.KeyInteracting.GenerateHash(EncryptedRsaKey, EncryptedAesKey)
 
 	MasterServerPrivateKey := os.Getenv("OurKey")
 	BytesMasterServerPrivateKey, err := hex.DecodeString(MasterServerPrivateKey)
@@ -50,7 +60,7 @@ func (p ProcessController) HandlingAndSendData(KeyOfServer []byte, RsaKeyNew []b
 		return err
 	}
 
-	Sign, err := p.KeyInteracting.GenerateSignature(HashSha, BytesMasterServerPrivateKey)
+	Sign, err := psa.E.KeyInteracting.GenerateSignature(HashSha, BytesMasterServerPrivateKey)
 	if err != nil {
 		return err
 	}
@@ -61,7 +71,7 @@ func (p ProcessController) HandlingAndSendData(KeyOfServer []byte, RsaKeyNew []b
 		Signature: Sign,
 	}
 
-	err = p.RedisInteracting.SendData(RedisDat, NameServer)
+	err = psa.E.RedisInteracting.SendData(RedisDat, NameServer)
 	if err != nil {
 		return err
 	}
