@@ -73,10 +73,7 @@ func main() {
 		if ServerKey == nil {
 			return
 		}
-
 		ServerName := serverMangementPack.GetServerName(i)
-
-		//ServerName := s.ServerManagement.GetServerName(i)
 		if ServerName == "" {
 			slog.Info("we can't find the server", "ServerNumber", i)
 			continue
@@ -89,6 +86,7 @@ func main() {
 		if err != nil {
 			return
 		}
+
 	}
 
 	log.Println("Server has done work", "Bool", true)

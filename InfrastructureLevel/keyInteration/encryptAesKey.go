@@ -3,6 +3,7 @@ package keyInteration
 import (
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha256"
 	"crypto/x509"
 	"log/slog"
 )
@@ -15,7 +16,7 @@ func (s *KeyInterationController) EncryptAesKey(AesKey []byte, RsaKey []byte) ([
 		return nil, err
 	}
 
-	encryptedText, err := rsa.EncryptPKCS1v15(rand.Reader, RsaKeyInPublic, AesKey)
+	encryptedText, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, RsaKeyInPublic, AesKey, nil)
 	if err != nil {
 		slog.Error("Error Encrypting", "Error", err.Error())
 		return nil, err
