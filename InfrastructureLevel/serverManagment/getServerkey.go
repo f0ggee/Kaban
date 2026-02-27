@@ -3,7 +3,6 @@ package serverManagment
 import (
 	"MasterServer_/DomainLevel"
 	"encoding/hex"
-	"log"
 	"log/slog"
 	"os"
 )
@@ -14,11 +13,6 @@ type Pack2 struct {
 
 type ServerManagement struct {
 	S Pack2
-}
-
-func (s *ServerManagement) SayHi() string {
-	//TODO implement me
-	return "Hello World!"
 }
 
 func NewServerManagement(s Pack2) *ServerManagement {
@@ -32,19 +26,26 @@ func (s *ServerManagement) GetServerKey(Num int) []byte {
 
 		ea := os.Getenv("server1")
 		slog.Info("E:", "E", ea)
-		//KeyInBytes := s.RsaKey.ConvertRsaKeyToBytes(ea)
-		////if KeyInBytes == nil {
-		////	log.Println("Rsa key does not exist")
-		////	return nil
-		////}
-
-		KeyInBytes, err := hex.DecodeString(ea)
+		rsaKey, err := hex.DecodeString(os.Getenv("server1"))
 		if err != nil {
-			log.Println("Error converting rsa key to bytes", "Error", err.Error())
+			slog.Error("Error in getting the server key", "ServerNumber", Num)
+			return nil
+		}
+
+		slog.Info("Got server key", "ServerNumber", Num)
+		return rsaKey
+
+	case 2:
+
+		//keyInBytes := s.S.RsaKey.ConvertRsaKeyToBytes(os.Getenv("server2"))
+
+		rsaKey, err := hex.DecodeString(os.Getenv("server2"))
+		if err != nil {
+			slog.Error("Error in getting the server key", "ServerNumber", Num)
 			return nil
 		}
 		slog.Info("Got server key", "ServerNumber", Num)
-		return KeyInBytes
+		return rsaKey
 
 	}
 

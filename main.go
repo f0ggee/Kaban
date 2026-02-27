@@ -34,7 +34,7 @@ func init() {
 
 }
 
-const ServersCount = 1
+const ServersCount = 2
 
 func main() {
 
@@ -67,30 +67,44 @@ func main() {
 
 	Sa := GlobalProces.NewAnotherProcessController(saz)
 	SwapRsaKey(*RsaAndMemoryInteract)
+	if StartHandling(serverMangementPack, Sa) {
+		return
+	}
 
-	for i := 1; i <= ServersCount; i++ {
-		ServerKey := serverMangementPack.GetServerKey(i)
-		if ServerKey == nil {
+	ticker := time.NewTicker(12 * time.Hour)
+	defer ticker.Stop()
+
+	go func() {
+
+	}()
+
+	for _ = range ticker.C {
+		SwapRsaKey(*RsaAndMemoryInteract)
+		slog.Info("Got a ticker")
+		if StartHandling(serverMangementPack, Sa) {
 			return
 		}
+	}
+
+}
+
+func StartHandling(serverMangementPack *serverManagment.ServerManagement, Sa *GlobalProces.AnotherProcessController) bool {
+	for i := 1; i <= ServersCount; i++ {
+		ServerKey := serverMangementPack.GetServerKey(i)
+
 		ServerName := serverMangementPack.GetServerName(i)
 		if ServerName == "" {
-			slog.Info("we can't find the server", "ServerNumber", i)
+			slog.Error("we can't find the server", "ServerNumber", i)
 			continue
 		}
-		slog.Info("we found the server", "ServerNumber", i, "ServerName", ServerName)
-
-		slog.Info("DtoData", "Data", Dto.Keys.NewPrivateKey.String())
 
 		err := Sa.HandlingAndSendData(ServerKey, Dto.Keys.NewPrivateKey.Bytes(), ServerName)
 		if err != nil {
-			return
+			continue
 		}
 
 	}
-
-	log.Println("Server has done work", "Bool", true)
-
+	return false
 }
 
 func SwapRsaKey(RsaKey DipendsInjective.RsaKeyManipulationWithRsaAndMemory) {
