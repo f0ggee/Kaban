@@ -8,6 +8,10 @@ import (
 
 type MemgurdControl struct{}
 
+func (m *MemgurdControl) SayHi() string {
+	return "Hi"
+}
+
 func (m *MemgurdControl) SettingNewKey(NewRsaKey []byte) {
 
 	Dto.Keys.NewPrivateKey = memguard.NewBuffer(len(NewRsaKey))
