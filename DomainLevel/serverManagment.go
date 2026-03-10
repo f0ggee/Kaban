@@ -1,7 +1,10 @@
 package DomainLevel
 
+import "crypto/rsa"
+
 type ServerDataManagement interface {
 	GetServerKey(int) []byte
 	GetServerName(int) string
-	FindHash([]byte) bool
+	ConvertPrivateKey([]byte) (*rsa.PrivateKey, error)
+	ConvertPublicKey([]byte) (*rsa.PublicKey, error)
 }

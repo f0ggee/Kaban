@@ -7,7 +7,8 @@ import (
 )
 
 var Keys struct {
-	Mu            sync.RWMutex
-	NewPrivateKey *memguard.LockedBuffer
-	OldPrivateKey *memguard.LockedBuffer
+	Mu              sync.RWMutex
+	NewPrivateKey   *memguard.LockedBuffer
+	OldPrivateKey   *memguard.LockedBuffer
+	MasterServerKey string
 }

@@ -31,6 +31,7 @@ func init() {
 
 	Dto.Keys.NewPrivateKey, _ = memguard.NewBufferFromReader(rand.Reader, 2048)
 	Dto.Keys.OldPrivateKey, _ = memguard.NewBufferFromReader(rand.Reader, 2048)
+	Dto.Keys.MasterServerKey = os.Getenv("OurKey")
 
 }
 
