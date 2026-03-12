@@ -3,6 +3,7 @@ package main
 import (
 	"MasterServer_/DipendsInjective"
 	"MasterServer_/Dto"
+	InftarctionLevel "MasterServer_/InfrastructureLevel"
 	"MasterServer_/InfrastructureLevel/GlobalProces"
 	"MasterServer_/InfrastructureLevel/MemguardManipulation"
 	"MasterServer_/InfrastructureLevel/RedisUse"
@@ -35,14 +36,12 @@ func init() {
 
 }
 
-const ServersCount = 2
-
 func main() {
 
 	handler := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	child := handler.With(
 		"Time", time.Now(),
-		"ServersCount", ServersCount,
+		"ServersCount", InftarctionLevel.ServersCount,
 	)
 	slog.SetDefault(child)
 
@@ -90,7 +89,7 @@ func main() {
 }
 
 func StartHandling(serverMangementPack *serverManagment.ServerManagement, Sa *GlobalProces.AnotherProcessController) bool {
-	for i := 1; i <= ServersCount; i++ {
+	for i := 1; i <= InftarctionLevel.ServersCount; i++ {
 		ServerKey := serverMangementPack.GetServerKey(i)
 
 		ServerName := serverMangementPack.GetServerName(i)

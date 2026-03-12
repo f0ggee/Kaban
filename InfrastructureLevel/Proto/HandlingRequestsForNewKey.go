@@ -1,8 +1,10 @@
 package Proto
 
 import (
+	"MasterServer_"
 	"MasterServer_/DomainLevel"
 	"MasterServer_/Dto"
+	InftarctionLevel "MasterServer_/InfrastructureLevel"
 	pb "MasterServer_/InfrastructureLevel/Proto/protoFiles"
 	"context"
 	"crypto/rand"
@@ -20,10 +22,10 @@ import (
 
 type HandlingRequestsForNewKey struct {
 	pb.UnimplementedSendingGettingServer
-	S                DomainLevel.GrpcDataMalnutrition
-	DescriptionGrpc  DomainLevel.GrpcDecryptInteraction
+	S                DomainLevel.GrpcHandleData
+	DescriptionGrpc  DomainLevel.GrpcDecryptor
 	ServerManagement DomainLevel.ServerDataManagement
-	EncryptionGrpc   DomainLevel.GrpcEncryptionInteraction
+	EncryptionGrpc   DomainLevel.GrpcEncryptor
 }
 
 func (s *HandlingRequestsForNewKey) GettingNewKey(ctx context.Context, data *pb.InputSendData) (*pb.OutputSendData, error) {
@@ -64,7 +66,7 @@ func (s *HandlingRequestsForNewKey) GettingNewKey(ctx context.Context, data *pb.
 		return &pb.OutputSendData{}, errors.New("something gone wrong")
 	}
 
-	DataIntoPacket := Dto.GrpcDataLookPacket{
+	DataIntoPacket := Dto.GrpcDataIncomingPacket{
 		Time:             time.Time{},
 		ServerName:       nil,
 		SignedServerName: nil,
@@ -102,9 +104,11 @@ func (s *HandlingRequestsForNewKey) GettingNewKey(ctx context.Context, data *pb.
 	if err != nil {
 		return &pb.OutputSendData{}, errors.New("something gone wrong")
 	}
-	JsonData, err := json.Marshal(Dto.GrpcOutcomingDataPre{
+	JsonData, err := json.Marshal(Dto.GrpcOutcomingDataPacket{
 		Sign:   SignedKey,
 		RsaKey: Dto.Keys.NewPrivateKey.Bytes(),
+		T1:     time.Now(),
+		T2:     InftarctionLevel.TimeForSwapping,
 	})
 	if err != nil {
 		slog.Error("Marshal Error", "Error", err.Error())
@@ -119,4 +123,10 @@ func (s *HandlingRequestsForNewKey) GettingNewKey(ctx context.Context, data *pb.
 	defer AesKey.Destroy()
 
 	plainText, err := s.EncryptionGrpc.GrpcAesEncryption(JsonData, AesKey.Bytes())
+	if err != nil {
+		return &pb.OutputSendData{}, errors.New("something gone wrong")
+	}
+
+
+	EncryptedAesKey,err := s.EncryptionGrpc.
 }

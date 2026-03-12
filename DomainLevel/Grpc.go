@@ -1,19 +1,20 @@
 package DomainLevel
 
-type GrpcDataMalnutrition interface {
+type GrpcHandleData interface {
 	FindHash([]byte) bool
 	SaveHash([]byte)
 	CheckSignature([]byte, []byte, []byte) error
 	GenerateSignature() ([]byte, error)
 }
 
-type GrpcMechanism interface {
-	HandlingAndSendData([]byte, []byte, string) error
+type GrpcHandle interface {
+	HandlingRequests([]byte, []byte, string) error
 }
-type GrpcEncryptionInteraction interface {
+type GrpcEncryptor interface {
 	GrpcAesEncryption([]byte, []byte) ([]byte, error)
+	GrpcEncryptAesKeyByRsa(AesKey []byte, RsaKey []byte) ([]byte, error)
 }
-type GrpcDecryptInteraction interface {
+type GrpcDecryptor interface {
 	DecryptIncomingAesKey([]byte) ([]byte, error)
 	DecryptCipherData([]byte, []byte) ([]byte, error)
 }

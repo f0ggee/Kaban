@@ -32,7 +32,7 @@ func NewAnotherProcessController(e ProcessController) *AnotherProcessController 
 
 func (psa *AnotherProcessController) HandlingAndSendData(KeyOfServer []byte, RsaKeyNew []byte, NameServer string) error {
 
-	slog.Info("Starting HandlingAndSendData")
+	slog.Info("Starting HandlingRequests")
 
 	AesKey := memguard.NewBufferFromBytes(psa.E.KeyInteracting.AesKey())
 	if AesKey == nil {
