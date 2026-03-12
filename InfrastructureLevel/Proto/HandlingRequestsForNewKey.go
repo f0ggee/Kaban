@@ -1,20 +1,17 @@
 package Proto
 
 import (
-	"MasterServer_"
 	"MasterServer_/DomainLevel"
 	"MasterServer_/Dto"
 	InftarctionLevel "MasterServer_/InfrastructureLevel"
 	pb "MasterServer_/InfrastructureLevel/Proto/protoFiles"
 	"context"
 	"crypto/rand"
-	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"log/slog"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/awnumar/memguard"
@@ -77,9 +74,8 @@ func (s *HandlingRequestsForNewKey) GettingNewKey(ctx context.Context, data *pb.
 		slog.Error("Unmarshal Error", "Error", err.Error())
 		return &pb.OutputSendData{}, errors.New("something gone wrong")
 	}
-
-	if DataIntoPacket.Time.Before(time.Now()) {
-		slog.Error("Time is too early")
+	ResultComparingTime := s.S.CheckLifePacket(DataIntoPacket.Time)
+	if ResultComparingTime {
 		return &pb.OutputSendData{}, errors.New("something gone wrong")
 	}
 
@@ -104,7 +100,9 @@ func (s *HandlingRequestsForNewKey) GettingNewKey(ctx context.Context, data *pb.
 	if err != nil {
 		return &pb.OutputSendData{}, errors.New("something gone wrong")
 	}
-	JsonData, err := json.Marshal(Dto.GrpcOutcomingDataPacket{
+
+	Dto.Keys.Mu.Lock()
+	OutcomingDataJson, err := s.ServerManagement.ConvertDataToJsonType(Dto.GrpcOutcomingDataPacket{
 		Sign:   SignedKey,
 		RsaKey: Dto.Keys.NewPrivateKey.Bytes(),
 		T1:     time.Now(),
@@ -114,6 +112,7 @@ func (s *HandlingRequestsForNewKey) GettingNewKey(ctx context.Context, data *pb.
 		slog.Error("Marshal Error", "Error", err.Error())
 		return &pb.OutputSendData{}, errors.New("something gone wrong")
 	}
+	Dto.Keys.Mu.Unlock()
 
 	AesKey, err := memguard.NewBufferFromReader(rand.Reader, 2048)
 	if err != nil {
@@ -122,11 +121,27 @@ func (s *HandlingRequestsForNewKey) GettingNewKey(ctx context.Context, data *pb.
 	}
 	defer AesKey.Destroy()
 
-	plainText, err := s.EncryptionGrpc.GrpcAesEncryption(JsonData, AesKey.Bytes())
+	plainText, err := s.EncryptionGrpc.GrpcAesEncryption(OutcomingDataJson, AesKey.Bytes())
 	if err != nil {
 		return &pb.OutputSendData{}, errors.New("something gone wrong")
 	}
 
+	EncryptedAesKey, err := s.EncryptionGrpc.GrpcEncryptAesKey(AesKey.Bytes(), ServerKey)
+	if err != nil {
+		return &pb.OutputSendData{}, errors.New("something gone wrong")
+	}
 
-	EncryptedAesKey,err := s.EncryptionGrpc.
+	OutcomingPacket, err := s.ServerManagement.ConvertDataToJsonType(Dto.GrpcPacket{
+		AesKeyData: EncryptedAesKey,
+		CipherData: plainText,
+	})
+	if err != nil {
+		slog.Error("Marshal Error", "Error", err.Error())
+		return &pb.OutputSendData{}, errors.New("something gone wrong")
+	}
+
+	return &pb.OutputSendData{
+		BytesOutput: OutcomingPacket,
+		Error:       nil,
+	}, nil
 }

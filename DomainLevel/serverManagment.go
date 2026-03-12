@@ -7,4 +7,5 @@ type ServerDataManagement interface {
 	GetServerName(int) string
 	ConvertPrivateKey([]byte) (*rsa.PrivateKey, error)
 	ConvertPublicKey([]byte) (*rsa.PublicKey, error)
+	ConvertDataToJsonType(any) ([]byte, error)
 }

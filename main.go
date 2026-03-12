@@ -6,9 +6,13 @@ import (
 	InftarctionLevel "MasterServer_/InfrastructureLevel"
 	"MasterServer_/InfrastructureLevel/GlobalProces"
 	"MasterServer_/InfrastructureLevel/MemguardManipulation"
+	pbRealization "MasterServer_/InfrastructureLevel/Proto"
+	pbProtoFile "MasterServer_/InfrastructureLevel/Proto/protoFiles"
 	"MasterServer_/InfrastructureLevel/RedisUse"
 	"MasterServer_/InfrastructureLevel/keyInteration"
 	"MasterServer_/InfrastructureLevel/rsaKeyManipulation"
+	"net"
+
 	"crypto/rand"
 	"log"
 	"log/slog"
@@ -19,6 +23,7 @@ import (
 
 	"github.com/awnumar/memguard"
 	"github.com/joho/godotenv"
+	"google.golang.org/grpc"
 )
 
 func init() {
@@ -71,7 +76,7 @@ func main() {
 		return
 	}
 
-	ticker := time.NewTicker(12 * time.Hour)
+	ticker := time.NewTicker(InftarctionLevel.TimeForSwapping)
 	defer ticker.Stop()
 
 	go func() {
@@ -84,6 +89,19 @@ func main() {
 		if StartHandling(serverMangementPack, Sa) {
 			return
 		}
+	}
+	lis, err := net.Listen("tcp", ":8080")
+	if err != nil {
+		slog.Error("failed to listen:", err.Error())
+		return
+	}
+
+	grpcServer := grpc.NewServer()
+
+	pbProtoFile.RegisterSendingGettingServer(grpcServer, &pbRealization.HandlingRequestsForNewKey{})
+	if err := grpcServer.Serve(lis); err != nil {
+		slog.Error("failed to serve:", err.Error())
+		return
 	}
 
 }

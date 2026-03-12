@@ -15,7 +15,6 @@ type ProcessController struct {
 	KeyInteracting   DomainLevel.KeyInteracting
 	RedisInteracting DomainLevel.RedisUse
 	ServerManagement DomainLevel.ServerDataManagement
-	Process          DomainLevel.Process
 }
 
 //func NewProcessController(keyInteracting DomainLevel.KeyInteracting, redisInteracting DomainLevel.RedisUse, serverManagement DomainLevel.ServerDataManagement) *ProcessController {

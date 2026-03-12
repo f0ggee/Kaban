@@ -5,12 +5,11 @@ import (
 )
 
 type CollectPacks struct {
-	KeyInteracting    DomainLevel.KeyInteracting
-	RedisInteracting  DomainLevel.RedisUse
-	ServerManaging    DomainLevel.ServerDataManagement
-	StartTransferring DomainLevel.Process
+	KeyInteracting   DomainLevel.KeyInteracting
+	RedisInteracting DomainLevel.RedisUse
+	ServerManaging   DomainLevel.ServerDataManagement
 }
 
-func NewCollectPacks(keyInteracting DomainLevel.KeyInteracting, redisInteracting DomainLevel.RedisUse, serverManaging DomainLevel.ServerDataManagement, startTransferring DomainLevel.Process) *CollectPacks {
-	return &CollectPacks{KeyInteracting: keyInteracting, RedisInteracting: redisInteracting, ServerManaging: serverManaging, StartTransferring: startTransferring}
+func NewCollectPacks(keyInteracting DomainLevel.KeyInteracting, redisInteracting DomainLevel.RedisUse, serverManaging DomainLevel.ServerDataManagement) *CollectPacks {
+	return &CollectPacks{KeyInteracting: keyInteracting, RedisInteracting: redisInteracting, ServerManaging: serverManaging}
 }
