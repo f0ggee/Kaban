@@ -8,7 +8,7 @@ import (
 )
 
 func (s *GrpcDataManagement) CheckSignature(Sign []byte, PublicServer []byte, ServerName []byte) error {
-	PublicKey, err := s.ServerDataManagement.ConvertPublicKey(PublicServer)
+	PublicKey, err := s.ServerDataManagement.S.ConvertPublicKey(PublicServer)
 	if err != nil {
 		return err
 	}

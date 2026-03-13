@@ -18,14 +18,22 @@ import (
 )
 
 type HandlingRequestsForNewKey struct {
-	pb.UnimplementedSendingGettingServer
 	S                DomainLevel.GrpcHandleData
 	DescriptionGrpc  DomainLevel.GrpcDecryptor
 	ServerManagement DomainLevel.ServerDataManagement
 	EncryptionGrpc   DomainLevel.GrpcEncryptor
 }
 
-func (s *HandlingRequestsForNewKey) GettingNewKey(ctx context.Context, data *pb.InputSendData) (*pb.OutputSendData, error) {
+type HandlingRequestsForNewKeyHandler struct {
+	pb.UnimplementedSendingGettingServer
+	S *HandlingRequestsForNewKey
+}
+
+func NewHandlingRequestsForNewKey(S *HandlingRequestsForNewKey) *HandlingRequestsForNewKeyHandler {
+	return &HandlingRequestsForNewKeyHandler{S: S}
+}
+
+func (s *HandlingRequestsForNewKeyHandler) GettingNewKey(ctx context.Context, data *pb.InputSendData) (*pb.OutputSendData, error) {
 
 	slog.Info("Start exchanging a key")
 	if data == nil {
@@ -33,12 +41,13 @@ func (s *HandlingRequestsForNewKey) GettingNewKey(ctx context.Context, data *pb.
 		return &pb.OutputSendData{}, errors.New("data is nil")
 	}
 
-	if s.S.FindHash(data.SendData) {
+	slog.Info("Here")
+	if s.S.S.FindHash(data.SendData) {
 		slog.Error("Hash has already been used")
 		return &pb.OutputSendData{}, errors.New("something gone wrong")
 	}
 
-	s.S.SaveHash(data.SendData)
+	s.S.S.SaveHash(data.SendData)
 
 	DataIncomintLook := Dto.GrpcPacket{
 		AesKeyData: nil,
@@ -51,13 +60,13 @@ func (s *HandlingRequestsForNewKey) GettingNewKey(ctx context.Context, data *pb.
 		return &pb.OutputSendData{}, errors.New("something gone wrong")
 	}
 
-	DecryptedAesKey, err := s.DescriptionGrpc.DecryptIncomingAesKey(DataIncomintLook.AesKeyData)
+	DecryptedAesKey, err := s.S.DescriptionGrpc.DecryptIncomingAesKey(DataIncomintLook.AesKeyData)
 	if err != nil {
 		slog.Error("Decrypt Error", "Error", err.Error())
 		return &pb.OutputSendData{}, errors.New("something gone wrong")
 	}
 
-	Data, err := s.DescriptionGrpc.DecryptCipherData(DecryptedAesKey, DataIncomintLook.CipherData)
+	Data, err := s.S.DescriptionGrpc.DecryptCipherData(DecryptedAesKey, DataIncomintLook.CipherData)
 	if err != nil {
 		slog.Error("Decrypt Error", "Error", err.Error())
 		return &pb.OutputSendData{}, errors.New("something gone wrong")
@@ -74,7 +83,7 @@ func (s *HandlingRequestsForNewKey) GettingNewKey(ctx context.Context, data *pb.
 		slog.Error("Unmarshal Error", "Error", err.Error())
 		return &pb.OutputSendData{}, errors.New("something gone wrong")
 	}
-	ResultComparingTime := s.S.CheckLifePacket(DataIntoPacket.Time)
+	ResultComparingTime := s.S.S.CheckLifePacket(DataIntoPacket.Time)
 	if ResultComparingTime {
 		return &pb.OutputSendData{}, errors.New("something gone wrong")
 	}
@@ -91,18 +100,18 @@ func (s *HandlingRequestsForNewKey) GettingNewKey(ctx context.Context, data *pb.
 		return &pb.OutputSendData{}, errors.New("something gone wrong")
 	}
 
-	err = s.S.CheckSignature(DataIntoPacket.SignedServerName, ServerKey, DataIntoPacket.ServerName)
+	err = s.S.S.CheckSignature(DataIntoPacket.SignedServerName, ServerKey, DataIntoPacket.ServerName)
 	if err != nil {
 		return &pb.OutputSendData{}, errors.New("something gone wrong")
 	}
 
-	SignedKey, err := s.S.GenerateSignature()
+	SignedKey, err := s.S.S.GenerateSignature()
 	if err != nil {
 		return &pb.OutputSendData{}, errors.New("something gone wrong")
 	}
 
 	Dto.Keys.Mu.Lock()
-	OutcomingDataJson, err := s.ServerManagement.ConvertDataToJsonType(Dto.GrpcOutcomingDataPacket{
+	OutcomingDataJson, err := s.S.ServerManagement.ConvertDataToJsonType(Dto.GrpcOutcomingDataPacket{
 		Sign:   SignedKey,
 		RsaKey: Dto.Keys.NewPrivateKey.Bytes(),
 		T1:     time.Now(),
@@ -114,24 +123,33 @@ func (s *HandlingRequestsForNewKey) GettingNewKey(ctx context.Context, data *pb.
 	}
 	Dto.Keys.Mu.Unlock()
 
-	AesKey, err := memguard.NewBufferFromReader(rand.Reader, 2048)
+	AesKey, err := memguard.NewBufferFromReader(rand.Reader, 32)
 	if err != nil {
 		slog.Error("Generate AesKey Error", "Error", err.Error())
 		return &pb.OutputSendData{}, errors.New("something gone wrong")
 	}
 	defer AesKey.Destroy()
 
-	plainText, err := s.EncryptionGrpc.GrpcAesEncryption(OutcomingDataJson, AesKey.Bytes())
+	//var wg sync.WaitGroup
+	//wg.Add(2)
+	//go func() {
+	//	defer wg.Done()
+	//
+	//}()
+	slog.Info("Here")
+	plainText, err := s.S.EncryptionGrpc.GrpcAesEncryption(OutcomingDataJson, AesKey.Bytes())
 	if err != nil {
 		return &pb.OutputSendData{}, errors.New("something gone wrong")
 	}
 
-	EncryptedAesKey, err := s.EncryptionGrpc.GrpcEncryptAesKey(AesKey.Bytes(), ServerKey)
+	slog.Info("Here 2 ")
+	EncryptedAesKey, err := s.S.EncryptionGrpc.GrpcEncryptAesKey(AesKey.Bytes(), ServerKey)
 	if err != nil {
 		return &pb.OutputSendData{}, errors.New("something gone wrong")
 	}
 
-	OutcomingPacket, err := s.ServerManagement.ConvertDataToJsonType(Dto.GrpcPacket{
+	slog.Info("Here 3 ")
+	OutcomingPacket, err := s.S.ServerManagement.ConvertDataToJsonType(Dto.GrpcPacket{
 		AesKeyData: EncryptedAesKey,
 		CipherData: plainText,
 	})
@@ -139,6 +157,8 @@ func (s *HandlingRequestsForNewKey) GettingNewKey(ctx context.Context, data *pb.
 		slog.Error("Marshal Error", "Error", err.Error())
 		return &pb.OutputSendData{}, errors.New("something gone wrong")
 	}
+
+	slog.Info("Here 2 " + "")
 
 	return &pb.OutputSendData{
 		BytesOutput: OutcomingPacket,

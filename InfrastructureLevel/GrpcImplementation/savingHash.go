@@ -4,15 +4,14 @@ import (
 	"MasterServer_/DomainLevel"
 	"MasterServer_/InfrastructureLevel/serverManagment"
 	"crypto/sha256"
-	"log/slog"
 	"time"
 )
 
-type PackGrpc struct {
+type PackForGrpcImplementation struct {
 	S DomainLevel.ServerDataManagement
 }
 type GrpcDataManagement struct {
-	ServerDataManagement DomainLevel.ServerDataManagement
+	ServerDataManagement PackForGrpcImplementation
 }
 
 func (s *GrpcDataManagement) SaveHash(hash []byte) {
