@@ -1,11 +1,10 @@
 package DomainLevel
 
-import "crypto/rsa"
-
-type ServerDataManagement interface {
+type GettingServersInfo interface {
 	GetServerKey(int) []byte
 	GetServerName(int) string
-	ConvertPrivateKey([]byte) (*rsa.PrivateKey, error)
-	ConvertPublicKey([]byte) (*rsa.PublicKey, error)
+}
+
+type ConverterData interface {
 	ConvertDataToJsonType(any) ([]byte, error)
 }

@@ -1,15 +1,11 @@
 package InftarctionLevel
 
-import (
-	"MasterServer_/DomainLevel"
-)
-
-type CollectPacks struct {
-	KeyInteracting   DomainLevel.KeyInteracting
-	RedisInteracting DomainLevel.RedisUse
-	ServerManaging   DomainLevel.ServerDataManagement
-}
-
-func NewCollectPacks(keyInteracting DomainLevel.KeyInteracting, redisInteracting DomainLevel.RedisUse, serverManaging DomainLevel.ServerDataManagement) *CollectPacks {
-	return &CollectPacks{KeyInteracting: keyInteracting, RedisInteracting: redisInteracting, ServerManaging: serverManaging}
-}
+//type CollectPacks struct {
+//	KeyInteracting   DomainLevel.KeyInteracting
+//	RedisInteracting DomainLevel.RedisUse
+//	ServerManaging   DomainLevel.GettingServersInfo
+//}
+//
+//func NewCollectPacks(keyInteracting DomainLevel.KeyInteracting, redisInteracting DomainLevel.RedisUse, serverManaging DomainLevel.GettingServersInfo) *CollectPacks {
+//	return &CollectPacks{KeyInteracting: keyInteracting, RedisInteracting: redisInteracting, ServerManaging: serverManaging}
+//}

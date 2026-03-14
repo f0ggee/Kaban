@@ -1,7 +1,6 @@
 package GlobalProces
 
 import (
-	"MasterServer_/DomainLevel"
 	"MasterServer_/Dto"
 	"encoding/hex"
 	"errors"
@@ -11,46 +10,31 @@ import (
 	"github.com/awnumar/memguard"
 )
 
-type ProcessController struct {
-	KeyInteracting   DomainLevel.KeyInteracting
-	RedisInteracting DomainLevel.RedisUse
-	ServerManagement DomainLevel.ServerDataManagement
-}
-
-//func NewProcessController(keyInteracting DomainLevel.KeyInteracting, redisInteracting DomainLevel.RedisUse, serverManagement DomainLevel.ServerDataManagement) *ProcessController {
-//	return &ProcessController{KeyInteracting: keyInteracting, RedisInteracting: redisInteracting, ServerManagement: serverManagement}
-//}
-
-type AnotherProcessController struct {
-	E ProcessController
-}
-
-func NewAnotherProcessController(e ProcessController) *AnotherProcessController {
-	return &AnotherProcessController{E: e}
-}
-
-func (psa *AnotherProcessController) HandlingAndSendData(KeyOfServer []byte, RsaKeyNew []byte, NameServer string) error {
+func (psa *ControllingExchange) HandlingAndSendData(KeyOfServer []byte, RsaKeyNew []byte, NameServer string) error {
 
 	slog.Info("Starting HandlingRequests")
 
-	AesKey := memguard.NewBufferFromBytes(psa.E.KeyInteracting.AesKey())
+	AesKey := memguard.NewBufferFromBytes(psa.E.CryptoGen.GenerateAesKey())
 	if AesKey == nil {
 		return errors.New("AesKey is nil")
 	}
 	defer AesKey.Destroy()
 
-	EncryptedRsaKey, err := psa.E.KeyInteracting.EncryptRsaKey(AesKey.Bytes(), RsaKeyNew)
+	EncryptedRsaKey, err := psa.E.Cryptos.EncrypterRsaKey(AesKey.Bytes(), RsaKeyNew)
 	if err != nil {
 
 		return err
 	}
 
-	EncryptedAesKey, err := psa.E.KeyInteracting.EncryptAesKey(AesKey.Bytes(), KeyOfServer)
+	EncryptedAesKey, err := psa.E.Cryptos.EncrypterAesKey(AesKey.Bytes(), KeyOfServer)
 	if err != nil {
 		return err
 	}
 
-	HashSha := psa.E.KeyInteracting.GenerateHash(EncryptedRsaKey, EncryptedAesKey)
+	arr := []byte{}
+	arr = append(arr, EncryptedRsaKey...)
+	arr = append(arr, EncryptedAesKey...)
+	HashSha := psa.E.CryptoGen.GenerateHash(arr)
 
 	MasterServerPrivateKey := os.Getenv("OurKey")
 	BytesMasterServerPrivateKey, err := hex.DecodeString(MasterServerPrivateKey)
@@ -59,7 +43,7 @@ func (psa *AnotherProcessController) HandlingAndSendData(KeyOfServer []byte, Rsa
 		return err
 	}
 
-	Sign, err := psa.E.KeyInteracting.GenerateSignature(HashSha, BytesMasterServerPrivateKey)
+	Sign, err := psa.E.CryptoGen.SignerData(HashSha, BytesMasterServerPrivateKey)
 	if err != nil {
 		return err
 	}

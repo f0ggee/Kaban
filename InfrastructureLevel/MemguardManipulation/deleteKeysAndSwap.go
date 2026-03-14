@@ -6,19 +6,7 @@ import (
 	"github.com/awnumar/memguard"
 )
 
-type MemgurdControl struct{}
-
-func (m *MemgurdControl) SayHi() string {
-	return "Hi"
-}
-
-func (m *MemgurdControl) SettingNewKey(NewRsaKey []byte) {
-
-	Dto.Keys.NewPrivateKey = memguard.NewBuffer(len(NewRsaKey))
-	Dto.Keys.NewPrivateKey.Copy(NewRsaKey)
-}
-
-func (m *MemgurdControl) DeleteKeysAndSwap() {
+func (m *MemgurdControl) SwapingOldKey() {
 
 	Dto.Keys.OldPrivateKey.Destroy()
 

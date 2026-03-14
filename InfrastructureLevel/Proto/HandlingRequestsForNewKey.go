@@ -19,21 +19,21 @@ import (
 
 type HandlingRequestsForNewKey struct {
 	S                DomainLevel.GrpcHandleData
-	DescriptionGrpc  DomainLevel.GrpcDecryptor
-	ServerManagement DomainLevel.ServerDataManagement
-	EncryptionGrpc   DomainLevel.GrpcEncryptor
+	DescriptionGrpc  DomainLevel.Decryptor
+	ServerManagement DomainLevel.GettingServersInfo
+	EncryptionGrpc   DomainLevel.Encryption
 }
 
-type HandlingRequestsForNewKeyHandler struct {
+type GrpcHandlerGettingNewKey struct {
 	pb.UnimplementedSendingGettingServer
 	S *HandlingRequestsForNewKey
 }
 
-func NewHandlingRequestsForNewKey(S *HandlingRequestsForNewKey) *HandlingRequestsForNewKeyHandler {
-	return &HandlingRequestsForNewKeyHandler{S: S}
+func NewHandlingRequestsForNewKey(S *HandlingRequestsForNewKey) *GrpcHandlerGettingNewKey {
+	return &GrpcHandlerGettingNewKey{S: S}
 }
 
-func (s *HandlingRequestsForNewKeyHandler) GettingNewKey(ctx context.Context, data *pb.InputSendData) (*pb.OutputSendData, error) {
+func (s *GrpcHandlerGettingNewKey) GettingNewKey(ctx context.Context, data *pb.InputSendData) (*pb.OutputSendData, error) {
 
 	slog.Info("Start exchanging a key")
 	if data == nil {
@@ -60,7 +60,7 @@ func (s *HandlingRequestsForNewKeyHandler) GettingNewKey(ctx context.Context, da
 		return &pb.OutputSendData{}, errors.New("something gone wrong")
 	}
 
-	DecryptedAesKey, err := s.S.DescriptionGrpc.DecryptIncomingAesKey(DataIncomintLook.AesKeyData)
+	DecryptedAesKey, err := s.S.DescriptionGrpc.DecryptAesKey(DataIncomintLook.AesKeyData)
 	if err != nil {
 		slog.Error("Decrypt Error", "Error", err.Error())
 		return &pb.OutputSendData{}, errors.New("something gone wrong")
@@ -105,7 +105,7 @@ func (s *HandlingRequestsForNewKeyHandler) GettingNewKey(ctx context.Context, da
 		return &pb.OutputSendData{}, errors.New("something gone wrong")
 	}
 
-	SignedKey, err := s.S.S.GenerateSignature()
+	SignedKey, err := s.S.S.GenerateSignatureFromKey()
 	if err != nil {
 		return &pb.OutputSendData{}, errors.New("something gone wrong")
 	}
@@ -143,7 +143,7 @@ func (s *HandlingRequestsForNewKeyHandler) GettingNewKey(ctx context.Context, da
 	}
 
 	slog.Info("Here 2 ")
-	EncryptedAesKey, err := s.S.EncryptionGrpc.GrpcEncryptAesKey(AesKey.Bytes(), ServerKey)
+	EncryptedAesKey, err := s.S.EncryptionGrpc.EncryptAesKey(AesKey.Bytes(), ServerKey)
 	if err != nil {
 		return &pb.OutputSendData{}, errors.New("something gone wrong")
 	}

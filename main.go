@@ -4,16 +4,19 @@ import (
 	"MasterServer_/DipendsInjective"
 	"MasterServer_/Dto"
 	InftarctionLevel "MasterServer_/InfrastructureLevel"
+	"MasterServer_/InfrastructureLevel/CryptoImpl/CryprtoGenerator"
+	"MasterServer_/InfrastructureLevel/CryptoImpl/Decryptor"
+	"MasterServer_/InfrastructureLevel/CryptoImpl/Encrypter"
 	"MasterServer_/InfrastructureLevel/GlobalProces"
-	"MasterServer_/InfrastructureLevel/GrpcImplementation"
-	"MasterServer_/InfrastructureLevel/GrpcImplementation/grpcDecryptInteraction"
-	"MasterServer_/InfrastructureLevel/GrpcImplementation/grpcEncryptInteraction"
+	"MasterServer_/InfrastructureLevel/Grpc/GrpcHandleData"
+	"MasterServer_/InfrastructureLevel/Grpc/PacketValidation"
 	"MasterServer_/InfrastructureLevel/MemguardManipulation"
 	pbRealization "MasterServer_/InfrastructureLevel/Proto"
 	pbProtoFile "MasterServer_/InfrastructureLevel/Proto/protoFiles"
 	"MasterServer_/InfrastructureLevel/RedisUse"
-	"MasterServer_/InfrastructureLevel/keyInteration"
 	"MasterServer_/InfrastructureLevel/rsaKeyManipulation"
+	"MasterServer_/InfrastructureLevel/serveManage/ConverterData"
+	"MasterServer_/InfrastructureLevel/serveManage/GettingInfo"
 
 	"net"
 
@@ -22,8 +25,6 @@ import (
 	"log/slog"
 	"os"
 	"time"
-
-	"MasterServer_/InfrastructureLevel/serverManagment"
 
 	"github.com/awnumar/memguard"
 	"github.com/joho/godotenv"
@@ -56,21 +57,31 @@ func main() {
 
 	memguard.CatchInterrupt()
 	defer memguard.Purge()
+	ConnectRedis := RedisUse.RedisConnect()
+	defer ConnectRedis.Close()
 
-	key := keyInteration.KeyInterationController{}
-	RedisInteracting := RedisUse.RedisUseStruct{}
-	//globalProcess := GlobalProces.ProcessController{}
-	memguardManipulation := MemguardManipulation.MemgurdControl{}
-	rsaKeyInteraction := rsaKeyManipulation.RsaKeyManipulation{}
-	managment := serverManagment.ServerManagement{}
-	GrcpDecryptor := grpcDecryptInteraction.GrpcDecryptRealization{}
-	GrpcEncryptor := grpcEncryptInteraction.GrpcEncryptInteraction{}
+	CryptoGeneret := CryprtoGenerator.CryprtoGenerating{}
+	Decryper := Decryptor.Decrypting{}
+	Encrypting := Encrypter.Encryption{}
+	AnotherProcessController := GlobalProces.ControllingExchange{}
+	GrpcHandlingData := GrpcHandleData.GrpcDataManagement{}
+	PacketValidating := PacketValidation.ValidatePacketData{}
+	MemguardConrol := MemguardManipulation.MemgurdControl{}
+	GrpcHandlerGettinNewKey := pbRealization.GrpcHandlerGettingNewKey{
+		UnimplementedSendingGettingServer: pbProtoFile.UnimplementedSendingGettingServer{},
+		S:                                 nil,
+	}
+	redisConn := RedisUse.RedisUsing{
+		Connect: ConnectRedis}
+	RsaKeyControl := rsaKeyManipulation.RsaKeyManipulation{}
+	ConvertData := ConverterData.ConvertingData{}
+	ServerInfo := GettingInfo.SeverManage{}
 
 	RsaAndMemoryInteract := DipendsInjective.NewRsaKeyManipulationWithRsaAndMemory(&memguardManipulation, &rsaKeyInteraction)
-	GrpcHandlingRealization := GrpcImplementation.GrpcDataManagement{ServerDataManagement: GrpcImplementation.PackForGrpcImplementation{S: &managment}}
+	GrpcHandlingRealization := GrpcHandleData.GrpcDataManagement{ServerDataManagement: GrpcHandleData.PackForGrpcImplementation{S: &managment}}
 
-	ServerManaging := serverManagment.ServerManagement{}
-	serverMangementPack := serverManagment.Pack2{RsaKey: &rsaKeyInteraction}
+	ServerManaging := GettingInfo.DataManipulation{}
+	serverMangementPack := GettingInfo.Pack2{RsaKey: &rsaKeyInteraction}
 
 	saz := GlobalProces.ProcessController{
 		KeyInteracting:   &key,
@@ -113,7 +124,7 @@ func main() {
 	for _ = range ticker.C {
 		SwapRsaKey(*RsaAndMemoryInteract)
 		slog.Info("Got a ticker")
-		if StartHandling(serverManagment.NewServerManagement(serverMangementPack), Sa) {
+		if StartHandling(GettingInfo.NewServerManipulation(serverMangementPack), Sa) {
 			return
 		}
 	}
@@ -121,7 +132,7 @@ func main() {
 
 }
 
-func StartHandling(serverMangementPack *serverManagment.ServerManagement, Sa *GlobalProces.AnotherProcessController) bool {
+func StartHandling(serverMangementPack *GettingInfo.DataManipulation, Sa *GlobalProces.ControllingExchange) bool {
 	for i := 1; i <= InftarctionLevel.ServersCount; i++ {
 		ServerKey := serverMangementPack.GetServerKey(i)
 		if ServerKey == nil {

@@ -4,24 +4,25 @@ import (
 	"MasterServer_/Dto"
 	"context"
 	"log/slog"
+
+	"github.com/redis/go-redis/v9"
 )
 
-type RedisUseStruct struct{}
+type RedisUsing struct {
+	Connect *redis.Client
+}
 
-func (*RedisUseStruct) SendData(data *Dto.RedisDataLooksLike, serverName string) error {
+func (s *RedisUsing) SendData(data *Dto.RedisDataLooksLike, serverName string) error {
 
-	connect := RedisConnect()
-	defer connect.Close()
-
-	err := connect.HSet(context.Background(), serverName, data).Err()
+	err := s.Connect.HSet(context.Background(), serverName, data).Err()
 	if err != nil {
-		slog.Error("RedisUseStruct.SendData()", "Error", err)
+		slog.Error("RedisUsing.SendData()", "Error", err)
 		return err
 	}
 	return nil
 }
 
-//func (*RedisUseStruct) SendData(data *Dto.RedisDataLooksLike, serverName string) error {
+//func (*RedisUsing) SendData(data *Dto.RedisDataLooksLike, serverName string) error {
 //
 //	log.Println("We emulate working redis")
 //	return nil
