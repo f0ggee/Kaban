@@ -31,10 +31,7 @@ func (psa *ControllingExchange) HandlingAndSendData(KeyOfServer []byte, RsaKeyNe
 		return err
 	}
 
-	arr := []byte{}
-	arr = append(arr, EncryptedRsaKey...)
-	arr = append(arr, EncryptedAesKey...)
-	HashSha := psa.E.CryptoGen.GenerateHash(arr)
+	HashSha := psa.E.CryptoGen.GenerateHash(EncryptedRsaKey, EncryptedAesKey)
 
 	MasterServerPrivateKey := os.Getenv("OurKey")
 	BytesMasterServerPrivateKey, err := hex.DecodeString(MasterServerPrivateKey)

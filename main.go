@@ -17,7 +17,6 @@ import (
 	"MasterServer_/InfrastructureLevel/rsaKeyManipulation"
 	"MasterServer_/InfrastructureLevel/serveManage/ConverterData"
 	"MasterServer_/InfrastructureLevel/serveManage/GettingInfo"
-
 	"net"
 
 	"crypto/rand"
@@ -60,44 +59,43 @@ func main() {
 	ConnectRedis := RedisUse.RedisConnect()
 	defer ConnectRedis.Close()
 
-	CryptoGeneret := CryprtoGenerator.CryprtoGenerating{}
+	CryptoGenerate := CryprtoGenerator.CryprtoGenerating{}
 	Decryper := Decryptor.Decrypting{}
 	Encrypting := Encrypter.Encryption{}
 	AnotherProcessController := GlobalProces.ControllingExchange{}
 	GrpcHandlingData := GrpcHandleData.GrpcDataManagement{}
 	PacketValidating := PacketValidation.ValidatePacketData{}
-	MemguardConrol := MemguardManipulation.MemgurdControl{}
-	GrpcHandlerGettinNewKey := pbRealization.GrpcHandlerGettingNewKey{
-		UnimplementedSendingGettingServer: pbProtoFile.UnimplementedSendingGettingServer{},
-		S:                                 nil,
-	}
-	redisConn := RedisUse.RedisUsing{
-		Connect: ConnectRedis}
+	MemguardControl := MemguardManipulation.MemgurdControl{}
+	ServerInfo := GettingInfo.SeverManage{}
+	redisConn := RedisUse.RedisUsing{Connect: ConnectRedis}
 	RsaKeyControl := rsaKeyManipulation.RsaKeyManipulation{}
 	ConvertData := ConverterData.ConvertingData{}
-	ServerInfo := GettingInfo.SeverManage{}
 
-	RsaAndMemoryInteract := DipendsInjective.NewRsaKeyManipulationWithRsaAndMemory(&memguardManipulation, &rsaKeyInteraction)
-	GrpcHandlingRealization := GrpcHandleData.GrpcDataManagement{ServerDataManagement: GrpcHandleData.PackForGrpcImplementation{S: &managment}}
+	//GrpcHandlerGettinNewKey := pbRealization.GrpcHandlerGettingNewKey{
+	//	UnimplementedSendingGettingServer: pbProtoFile.UnimplementedSendingGettingServer{},
+	//	S: pbRealization.HandlingRequestsForNewKey{
+	//		Grpc:             &GrpcHandlingData,
+	//		ServerManagement: &ServerInfo,
+	//		Encryption:       &Encrypting,
+	//		Checker:          &PacketValidating,
+	//		CryptoGenerating: &CryptoGenerate,
+	//		ConverterJson:    &ConvertData,
+	//	},
+	//}
 
-	ServerManaging := GettingInfo.DataManipulation{}
-	serverMangementPack := GettingInfo.Pack2{RsaKey: &rsaKeyInteraction}
-
-	saz := GlobalProces.ProcessController{
-		KeyInteracting:   &key,
-		RedisInteracting: &RedisInteracting,
-		ServerManagement: &ServerManaging,
-	}
-
-	NewProccesForGrpcHandling := pbRealization.NewHandlingRequestsForNewKey(&pbRealization.HandlingRequestsForNewKey{
-		S:                &GrpcHandlingRealization,
-		DescriptionGrpc:  GrcpDecryptor,
-		ServerManagement: &ServerManaging,
-		EncryptionGrpc:   GrpcEncryptor,
+	Injective1 := DipendsInjective.NewRsaKeyManipulationWithRsaAndMemory(&MemguardControl, &RsaKeyControl)
+	Injective2 := GlobalProces.NewAnotherProcessController(GlobalProces.ProcessController{
+		Cryptos:          &Encrypting,
+		CryptoGen:        &CryptoGenerate,
+		RedisInteracting: &redisConn,
+		ServerManagement: &ServerInfo,
 	})
-	Sa := GlobalProces.NewAnotherProcessController(saz)
-	SwapRsaKey(*RsaAndMemoryInteract)
-	if StartHandling(&ServerManaging, Sa) {
+
+	//injective3Grpc := pbRealization.NewGrpcHandlerGettingNewKey(&pbProtoFile.UnimplementedSendingGettingServer{}, &pbRealization.HandlingRequestsForNewKey{
+	//
+	//})
+	SwapRsaKey(*Injective1)
+	if StartHandling(&ServerInfo, Injective2) {
 		return
 	}
 
@@ -105,7 +103,7 @@ func main() {
 	defer ticker.Stop()
 
 	go func() {
-		lis, err := net.Listen("tcp", "localhost:8080")
+		lis, err := net.Listen("tcp", ":8081")
 		if err != nil {
 			slog.Error("failed to listen:", err.Error())
 			return
@@ -113,7 +111,18 @@ func main() {
 
 		grpcServer := grpc.NewServer()
 
-		pbProtoFile.RegisterSendingGettingServer(grpcServer, NewProccesForGrpcHandling)
+		pbProtoFile.RegisterSendingGettingServer(grpcServer, &pbRealization.GrpcHandlerGettingNewKey{
+			UnimplementedSendingGettingServer: pbProtoFile.UnimplementedSendingGettingServer{},
+			S: pbRealization.HandlingRequestsForNewKey{
+				Grpc:             &GrpcHandlingData,
+				ServerManagement: &ServerInfo,
+				Encryption:       &Encrypting,
+				Checker:          &PacketValidating,
+				CryptoGenerating: &CryptoGenerate,
+				ConverterJson:    &ConvertData,
+				Decrypting:       &Decryper,
+			},
+		})
 		if err := grpcServer.Serve(lis); err != nil {
 			slog.Error("failed to serve:", err.Error())
 			return
@@ -122,25 +131,26 @@ func main() {
 	}()
 
 	for _ = range ticker.C {
-		SwapRsaKey(*RsaAndMemoryInteract)
+		slog.Info("We got the tick")
+		SwapRsaKey(*Injective1)
 		slog.Info("Got a ticker")
-		if StartHandling(GettingInfo.NewServerManipulation(serverMangementPack), Sa) {
+		if StartHandling(&ServerInfo, &AnotherProcessController) {
 			return
 		}
+		slog.Info("Finished the exchange")
 	}
-	slog.Info("Ep")
 
 }
 
-func StartHandling(serverMangementPack *GettingInfo.DataManipulation, Sa *GlobalProces.ControllingExchange) bool {
+func StartHandling(serverManagementPack *GettingInfo.SeverManage, Sa *GlobalProces.ControllingExchange) bool {
 	for i := 1; i <= InftarctionLevel.ServersCount; i++ {
-		ServerKey := serverMangementPack.GetServerKey(i)
+		ServerKey := serverManagementPack.GetServerKey(i)
 		if ServerKey == nil {
 			slog.Error("ServerKey is nil")
 			continue
 		}
 
-		ServerName := serverMangementPack.GetServerName(i)
+		ServerName := serverManagementPack.GetServerName(i)
 		if ServerName == "" {
 			slog.Error("we can't find the server", "ServerNumber", i)
 			continue
@@ -156,16 +166,15 @@ func StartHandling(serverMangementPack *GettingInfo.DataManipulation, Sa *Global
 }
 
 func SwapRsaKey(RsaKey DipendsInjective.RsaKeyManipulationWithRsaAndMemory) {
-	Dto.Keys.Mu.Lock()
+
 	slog.Info("Swaping starts")
 
 	TemporallySaving := memguard.NewBufferFromBytes(RsaKey.RsaKey.GenerateRsaKey())
 	defer TemporallySaving.Destroy()
 
-	RsaKey.KeyAndMemory.DeleteKeysAndSwap()
-
-	RsaKey.KeyAndMemory.SettingNewKey(TemporallySaving.Bytes())
+	Dto.Keys.Mu.Lock()
+	RsaKey.KeyAndMemory.SwapingOldKey()
+	RsaKey.KeyAndMemory.InstallingNewKey(TemporallySaving.Bytes())
 	log.Println("Swaping End")
-
 	Dto.Keys.Mu.Unlock()
 }

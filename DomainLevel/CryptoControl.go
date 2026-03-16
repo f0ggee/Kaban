@@ -7,7 +7,7 @@ type Encryption interface {
 
 type CryptoGenerator interface {
 	SignerData([]byte, []byte) ([]byte, error)
-	GenerateHash([]byte) []byte
+	GenerateHash([]byte, []byte) []byte
 	GenerateAesKey() []byte
 	GrpcSignerKey() ([]byte, error)
 }
@@ -15,4 +15,5 @@ type CryptoGenerator interface {
 type Decryptor interface {
 	DecrypterCipherData([]byte, []byte) ([]byte, error)
 	GrpcDecrypterAesKey([]byte) ([]byte, error)
+	SayHi() string
 }

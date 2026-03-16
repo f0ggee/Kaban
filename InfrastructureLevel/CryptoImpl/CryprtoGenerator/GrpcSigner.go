@@ -24,7 +24,7 @@ func (s *CryprtoGenerating) GrpcSignerKey() ([]byte, error) {
 		return nil, err
 	}
 
-	hash := s.GenerateHash(Dto.Keys.NewPrivateKey.Bytes())
+	hash := s.GenerateHash(Dto.Keys.NewPrivateKey.Bytes(), nil)
 	SignedMassage, err := rsa.SignPKCS1v15(rand.Reader, privateKey, crypto.SHA256, hash[:])
 	if err != nil {
 		slog.Error("GenerateSignatureFromKey Error while trying to sign signature", "error", err.Error())
