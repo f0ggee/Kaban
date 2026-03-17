@@ -5,6 +5,7 @@ Filesbes is a dedicated service designed for the rapid transfer of files between
 We highly value your privacy. The platform is built on the principle of ephemeral data handling, ensuring your information is never stored longer than necessary.
 
 ---
+<img width="2816" height="1536" alt="Gemini_Generated_Image_e77muie77muie77m" src="https://github.com/user-attachments/assets/2d6ac0ac-8b82-4603-b5d0-b52a4e1d9ace" />
 
 ## How It Works
 
