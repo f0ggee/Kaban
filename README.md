@@ -3,7 +3,7 @@
 Filesbes is a dedicated service designed for the rapid transfer of files between different devices. It provides a streamlined alternative to using messaging applications or email services for simple document sharing.
 
 We highly value your privacy. The platform is built on the principle of ephemeral data handling, ensuring your information is never stored longer than necessary.
-![Uploading Gemini_Generated_Image_9tdida9tdida9tdi.png…]()
+
 
 ---
 
