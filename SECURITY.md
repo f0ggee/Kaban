@@ -10,7 +10,7 @@ Versions which we  update and continue supporting
 You can report about incidensts by there are two ways report 
 
 ## Contacts 
-Whatever the  type of your message, you can write to us using these platforms but, when you write you have to follow of a style message(About it in sections are below):
+Whatever the  type of your message, you can write to us using these platforms but, when you write you have to follow  style message(About it in sections are below):
 1) Telegram - @ishotos
 2) Gmail - foggefogge2000@gmail.com
 
