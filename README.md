@@ -1,8 +1,5 @@
 
-
-<img width="2752" height="1536" alt="Untitled" src="https://github.com/user-attachments/assets/7f0a0e4c-fc08-474b-936a-25ceaa96aebe" />
-
-
+<img width="1174" height="641" alt="TruePhot-2" src="https://github.com/user-attachments/assets/17cfc8c6-b814-46c1-98e4-e6ce8f945dab" />
 
 # Filesbes - Fast File Transfer
 
