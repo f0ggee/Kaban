@@ -16,10 +16,10 @@ We highly value your privacy. The platform is built on the principle of ephemera
 ## How It Works
 
 The transfer process is designed to be completed in four steps:
-![exampleDownloading](https://github.com/user-attachments/assets/cb346c1f-cc3c-4e01-8264-07f5c4c44adb)
 1. Upload: Select and upload your file to the platform.
-![Запись экрана 2026-03-19 в 14 22 59-4](https://github.com/user-attachments/assets/4a1b7488-241a-4f9b-a11e-13d1c366bff0)
+![exampleDownloading](https://github.com/user-attachments/assets/cb346c1f-cc3c-4e01-8264-07f5c4c44adb)
 2. Link: Receive a unique, personal transfer link.
+![GettingLink](https://github.com/user-attachments/assets/4a1b7488-241a-4f9b-a11e-13d1c366bff0)
 3. Access: Open the provided link in a web browser on the receiving device.
 4. Download: Save the file to the new device.
 
