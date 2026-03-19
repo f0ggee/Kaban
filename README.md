@@ -22,6 +22,7 @@ The transfer process is designed to be completed in four steps:
 ![GettingLink](https://github.com/user-attachments/assets/4a1b7488-241a-4f9b-a11e-13d1c366bff0)
 3. Access: Open the provided link in a web browser on the receiving device.
 4. Download: Save the file to the new device.
+![Convert to GIF project](https://github.com/user-attachments/assets/140516d5-4e30-4315-be73-a4b238c2ae41)
 
 ---
 
