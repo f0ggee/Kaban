@@ -17,6 +17,7 @@ We highly value your privacy. The platform is built on the principle of ephemera
 
 The transfer process is designed to be completed in four steps:
 
+![Запись экрана 2026-03-19 в 14 22 59-2](https://github.com/user-attachments/assets/1cb9204f-5560-4696-acf6-5eb002167f8e)
 1. Upload: Select and upload your file to the platform.
 2. Link: Receive a unique, personal transfer link.
 3. Access: Open the provided link in a web browser on the receiving device.
