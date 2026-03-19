@@ -1,6 +1,4 @@
-
 <img width="1174" height="641" alt="TruePhot-2" src="https://github.com/user-attachments/assets/17cfc8c6-b814-46c1-98e4-e6ce8f945dab" />
-
 # Filesbes - Fast File Transfer
 
 Filesbes is a dedicated service designed for the rapid transfer of files between different devices. It provides a streamlined alternative to using messaging applications or email services for simple document sharing.
