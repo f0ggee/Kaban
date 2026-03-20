@@ -1,1 +1,4 @@
-## This file contains explaintion about some secure elements of my app
+## This file contains the explanation about some secure elements of my app
+
+
+
