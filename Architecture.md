@@ -1,1 +1,1 @@
-
+## This file contains explaintion about some secure elements of my app
