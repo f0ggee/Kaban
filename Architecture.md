@@ -10,3 +10,7 @@
 
 
 2)Then we generate a hash and sign it with a  master server's key. This has been added so that a server which will get a packet make sure that it is from the Master server truly 
+
+
+<img width="6324" height="4553" alt="image" src="https://github.com/user-attachments/assets/23874f37-b1a8-4b2b-b281-caa699d1eb5e" />
+
